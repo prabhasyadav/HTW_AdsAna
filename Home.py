@@ -5,7 +5,7 @@ st.set_page_config(
     page_icon="👋"
 )
 
-st.write("# Welcome to the Adsoption Analysis Application!")
+st.write("# Adsoption Analysis Application!")
 
 st.markdown(
     """
