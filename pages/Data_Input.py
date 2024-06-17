@@ -2,7 +2,7 @@ import streamlit as st
 # from streamlit_theme import st_theme
 import pandas as pd
 import numpy as np
-from process_data import display_input_data
+from process_data import *
 from calculations import *
 st.set_page_config(page_title="Data Input")
 
@@ -10,109 +10,112 @@ st.set_page_config(page_title="Data Input")
 
 st.write("# Data Input")
 
-tab1, tab2 = st.tabs(["Input Data", "View Data"])
+tab1, tab2 = st.tabs(["Input Data", "View Current Data"])
 
 with tab1:
+
+    st.subheader("Experimental Data Files")
+    input_file = st.file_uploader("Upload a file", accept_multiple_files = False)
+    K=[]
+    n=[]
+    c0=0
+    mA_VL = []
+    ci = []
+    qi = [] 
+    if input_file:
+        try:
+            mA_VL, ci, qi, K, n, c0 = read_csv_and_extract_columns(input_file)    
+        except Exception as e:
+            print("Error in reading file:", e)
+            st.error('Invalid File Format')
+    st.divider()
+
     col1, col2 = st.columns(2, gap="large")
-    with col1:
+    with col1:    
         st.subheader("Initial Concentrations")
-        iso1_c0 = st.number_input("Isotherm 1 c0")
-        iso2_c0 = st.number_input("Isotherm 2 c0")
+        c0 = st.number_input("c0 value", value=c0)
 
-        st.subheader("Experimental Data Files")
-        input_files = st.file_uploader("Upload a file", accept_multiple_files = True)
-
-    with col2:
         st.subheader("Adsorption Parameters")
-        adsorbable_num = st.selectbox("Number of Adsorption Components", [1,2,3,4,5,6])
+        # adsorbable_num = st.selectbox("Number of Adsorption Components", [1,2,3,4,5,6])
                 
-        ads_df = pd.DataFrame({"K":[0], "n":[0]}, columns=("K", "n"), index=range(adsorbable_num))
+        ads_df = pd.DataFrame({"K":K, "n":n}, columns=("K", "n"))
         ads_df = ads_df.astype({'K':float, 'n':float})
         ads_df = st.data_editor(ads_df,
         column_config={
             "K": st.column_config.NumberColumn("K", help="About K parameter"),
             "n": st.column_config.NumberColumn("n", help="About n parameter")},
         use_container_width=True)
+
         
+
+    with col2:
         
+        st.subheader("Isotherm Data")
+        isotherm_df = pd.DataFrame({"mA/VL":mA_VL, "ci":ci, "qi":qi}, columns=("mA/VL", "ci", "qi"))
+        isotherm_df = isotherm_df.astype({'mA/VL':float, 'ci':float, 'qi':float})
+        isotherm_df = st.data_editor(isotherm_df,
+        column_config={
+            "mA/VL": st.column_config.NumberColumn("mA/VL", help="About mA/VL parameter"),
+            "ci": st.column_config.NumberColumn("ci", help="About ci parameter"),
+            "qi": st.column_config.NumberColumn("qi", help="About qi parameter")},
+        use_container_width=True)
+    
     st.divider()
     submit_btn = st.button("Submit")
 
     if submit_btn: #process input data and store to session state
-        for key in st.session_state.keys(): #clear all session states
-            del st.session_state[key]
-        disp_col1, disp_col2 = st.columns(2, gap="large")
-        input_data_dfs = []
-        input_data_arrs = []
+        try:
+            for key in st.session_state.keys(): #clear all session states
+                del st.session_state[key]
+
+            st.session_state['K'] = ads_df['K'].to_numpy()
+            st.session_state['n'] = ads_df['n'].to_numpy()
+
+            st.session_state['dosage_lst'] = isotherm_df['mA/VL'].to_numpy()
+            st.session_state['c_exp_lst'] = isotherm_df['ci'].to_numpy()
+            st.session_state['q_exp_lst'] = isotherm_df['qi'].to_numpy()
+
+            st.session_state['c0'] = c0
+
+            st.session_state['c_calc_lst']=[]
+            st.session_state['q_calc_lst']=[]
+
+            st.success("Data input successfully.")
+        except Exception as e:
+            st.error("Something went wrong while loading the input data. Please try again.")
         
-        for file_index, input_file in enumerate(input_files):
-            index = file_index + 1
-            data_arr, data_df = display_input_data(input_file)
-            st.session_state[f'data_file{index}'] = data_arr
-            input_data_dfs.append(data_df)
-            input_data_arrs.append(data_arr)
-            st.session_state[f'c_calc_lst{index}']=[]
-            st.session_state[f'q_calc_lst{index}']=[]
-
-        with disp_col1:
-            st.dataframe(input_data_dfs[0], use_container_width=True)
-        if len(input_data_dfs)==2:
-            with disp_col2:
-                st.dataframe(input_data_dfs[1], use_container_width=True)
-        st.write(input_data_dfs)
-
-        st.session_state['K'] = ads_df['K'].to_numpy()
-        st.session_state['n'] = ads_df['n'].to_numpy()
-
-        st.session_state['iso1_c0'] = iso1_c0
-        st.session_state['iso2_c0'] = iso2_c0
-
-        for index, data_arr in enumerate(input_data_arrs):
-            arr_index = index + 1
-            for dosage in data_arr:
-                mA_VL = dosage[0]
-                c_exp = dosage[1]
-                q_exp = dosage[2]
-
-                if f'c_exp_lst{arr_index}' not in st.session_state:
-                    st.session_state[f'c_exp_lst{arr_index}'] = []
-                if f'q_exp_lst{arr_index}' not in st.session_state:
-                    st.session_state[f'q_exp_lst{arr_index}'] = []
-                if f'dosage_lst{arr_index}' not in st.session_state:
-                    st.session_state[f'dosage_lst{arr_index}'] = []
-                st.session_state[f'c_exp_lst{arr_index}'].append(c_exp)
-                st.session_state[f'q_exp_lst{arr_index}'].append(q_exp)
-                st.session_state[f'dosage_lst{arr_index}'].append(mA_VL)
-
-                fractions = initialize_fractions(st.session_state['K'], st.session_state['n'], st.session_state['iso1_c0'])
-                data_point = np.array([[c_exp, q_exp]])
-
-                optimized_params, c_calc_lst_opt, q_calc_lst_opt = optimize_adsorption(fractions, data_point, mA_VL, st.session_state[f'c_calc_lst{arr_index}'], st.session_state[f'q_calc_lst{arr_index}'])
-                st.session_state[f'c_calc_lst{arr_index}']=c_calc_lst_opt
-                st.session_state[f'q_calc_lst{arr_index}']=q_calc_lst_opt
-            st.write(len(st.session_state[f'c_calc_lst{arr_index}']))
-        
-        for key in st.session_state.keys():
-            st.write(key)
-            st.write(st.session_state[key])
-        # for dosage in experimental_data1:
-        # mA_VL = dosage[0]
-        # c_exp = dosage[1]
-        # q_exp = dosage[2]
-
-        # c_exp_lst1.append(c_exp)
-        # q_exp_lst1.append(q_exp)
-        # dosage_lst.append(mA_VL)
-
-        # fractions = initialize_fractions(K, n, c01)
-        # data_point = np.array([[c_exp, q_exp]])
-
-        # optimized_params = optimize_adsorption(fractions, data_point, mA_VL)
 
 
 
 with tab2:
-    st.write("View Input Data, Visualization...")
+    if 'dosage_lst' not in st.session_state.keys():
+        st.info("No input data added yet.")
+    else:
+        col1, col2 = st.columns(2, gap="medium")
+        
+        with col1:
+            st.subheader("Isotherm Data")
+            iso_input_df = pd.DataFrame({"mA/VL":st.session_state['dosage_lst'], "Concentration":st.session_state['c_exp_lst'], "Adsorption":st.session_state['q_exp_lst']})
+            st.dataframe(iso_input_df, use_container_width=True)
+        with col2:
+            col2_1, col2_2 = st.columns(2, gap="small")
+            with col2_1:
+                st.subheader('c0 Value : ')#
+            with col2_2:
+                st.html('''<style>
+                    h3.value_text{
+                            padding-top: 0.75rem;
+                            font: bold;
+                            font-size: 1.5rem;
+                            color: white;
+                    }
+                    </style>''')
+                st.markdown(f'''
+                    <h3 class="value_text">{st.session_state['c0']}</h3>''', unsafe_allow_html=True)
+            st.divider()
+            st.subheader("Adsorption Components")
+            ads_input_df = pd.DataFrame({"K": st.session_state['K'], "n":st.session_state['n']})
+            st.dataframe(ads_input_df, use_container_width=True)
 
 st.markdown("""
 <style>
