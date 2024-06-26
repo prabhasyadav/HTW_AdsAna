@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Adsorption Analysis",
+    page_title="Adsorption Analysis (Ver. Alpha)",
     page_icon="👋"
 )
 
