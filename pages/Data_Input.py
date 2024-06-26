@@ -103,19 +103,21 @@ with tab2:
                 st.subheader('c0 Value : ')#
             with col2_2:
                 st.html('''<style>
-                    h3.value_text{
-                            padding-top: 0.75rem;
-                            font: bold;
+                    p.value_text{
+                            padding-top: 0.5rem;
                             font-size: 1.5rem;
                             color: white;
                     }
                     </style>''')
                 st.markdown(f'''
-                    <h3 class="value_text">{st.session_state['c0']}</h3>''', unsafe_allow_html=True)
+                    <p class="value_text">{st.session_state['c0']}</p>''', unsafe_allow_html=True)
             st.divider()
             st.subheader("Adsorption Components")
             ads_input_df = pd.DataFrame({"K": st.session_state['K'], "n":st.session_state['n']})
             st.dataframe(ads_input_df, use_container_width=True)
+
+
+
 
 st.markdown("""
 <style>

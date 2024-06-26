@@ -89,30 +89,6 @@ def adjust_values_with_fits(x_data, y_data_exp, y_data_calc, fit_func):
 
     return adjusted_y_calc.tolist()
 
-# function to plot curve
-def plot_doc_curve(c_conc, exp_q, calc_loading):
-    plt.figure(figsize=(10, 6))
-
-    # Plotting experimental data as scatter points
-    plt.scatter(c_conc, exp_q, color='blue', marker='o', label='Experimental Data')
-
-    # Plotting calculated data as a line
-    plt.plot(c_conc, calc_loading, color='black', linestyle='-', label='Calculated Data')
-
-    # Adding plot labels and title
-    plt.xlabel('c (mg C L\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE})')
-    plt.ylabel('q (mg C g\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE})')
-    plt.title('DOC Adsorption Analysis')
-
-    # Adding a grid for better readability
-    plt.grid(True)
-
-    # Adding legend to identify scatter and line
-    plt.legend()
-
-    # Show the plot
-    plt.show()
-
 #This function calculates error percentage of components in concentration distribution
 #Changes in the function (-PKasa)
 def calculate_error_percentage(exp_ci, exp_qi, calc_ci, calc_qi):
@@ -194,3 +170,125 @@ def get_qi(dist, dosage_lst, q, K):
 
     qi_df['Total Loading'] = q
     return qi_df
+
+def plot_doc_curve(c_conc, exp_c, exp_q, calc_loading):
+    if c_conc[-1] > 0.4:
+        c_conc[-1]-=0.3
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plotting experimental data as scatter points
+    ax.scatter(exp_c, exp_q, color='blue', marker='o', label='Experimental Data')
+
+    ax.scatter(c_conc, calc_loading, color='red', marker='x')
+
+    # Plotting calculated data as a line
+    ax.plot(c_conc, calc_loading, color='black', linestyle='-', label='Calculated Data')
+
+    # Adding plot labels and title
+    ax.set_xlabel('c (mg  L\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE})')
+    ax.set_ylabel('q (mg  g\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE})')
+    ax.set_title('DOC Adsorption Analysis')
+
+    # Adding a grid for better readability
+    ax.grid(True)
+
+    # Adding legend to identify scatter and line
+    ax.legend()
+
+    return fig
+
+def plot_doc_log_curve(c_conc, exp_c, exp_q, calc_loading):
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plotting experimental data as scatter points (log scale)
+    ax.scatter(np.log10(exp_c), np.log10(exp_q), color='blue', marker='o', label='Experimental Data')
+
+    ax.scatter(np.log10(c_conc), np.log10(calc_loading), color='red', marker='x')
+
+    # Plotting calculated data as a line (log scale)
+    ax.plot(np.log10(c_conc), np.log10(calc_loading), color='black', linestyle='-', label='Calculated Data')
+
+    # Adding plot labels and title
+    ax.set_xlabel('log(c) (log(mg  L\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}))')
+    ax.set_ylabel('log(q) (log(mg  g\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}))')
+    ax.set_title('DOC Adsorption Analysis (Log Scale)')
+
+    # Adding a grid for better readability
+    ax.grid(True)
+
+    # Adding legend to identify scatter and line
+    ax.legend()
+
+    return fig
+
+def plot_dosage_vs_concentration(dosage, concentration, calculated_concentration):
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plotting dosage vs. experimental concentration as scatter points
+    ax.scatter(dosage, concentration, color='green', marker='o', label='Experimental Concentration points')
+
+    # Plotting dosage vs. experimental concentration as a line
+    ax.plot(dosage, concentration, color='black', linestyle='-', label='Experimental Concentration Line')
+
+    # Plotting dosage vs. calculated concentration as scatter points
+    ax.scatter(dosage, calculated_concentration, color='blue', marker='x', label='Calculated Concentration points')
+
+    # Plotting dosage vs. calculated concentration as a line
+    ax.plot(dosage, calculated_concentration, color='red', linestyle='--', label='Calculated Concentration Line')
+
+    # Adding plot labels and title
+    ax.set_xlabel('Dosage (mg/L)')
+    ax.set_ylabel('Concentration (mg/L)')
+    ax.set_title('Dosage vs. Experimental and Calculated Concentration')
+
+    # Adding a grid for better readability
+    ax.grid(True)
+
+    # Adding legend to identify scatter and line
+    ax.legend()
+
+    return fig
+
+def plot_conc_components(dosage_lst, ci_df):
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Loop through each component except Component 0
+    for col in ci_df.columns[:-1]:  # Skip the 'Total Conc' column
+        if col != 'Component 0':
+            ax.plot(dosage_lst, ci_df[col], marker='o', label=col)
+
+    # Adding plot labels and title
+    ax.set_xlabel('Dosage (mg/L)')
+    ax.set_ylabel('Concentration (mg/L)')
+    ax.set_title('Concentration of Each Component at Different Dosages')
+
+    # Adding a grid for better readability
+    ax.grid(True)
+
+    # Adding legend to identify each component
+    ax.legend()
+
+    return fig
+
+def plot_loading_components(dosage_lst, qi_df):
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Loop through each component except Component 0
+    for col in qi_df.columns[:-1]:  # Skip the 'Total Loading' column
+        if col != 'Component 0':
+            ax.plot(dosage_lst, qi_df[col], marker='o', label=col)
+
+    # Adding plot labels and title
+    ax.set_xlabel('Dosage (mg/L)')
+    ax.set_ylabel('Loading (mg/g)')
+    ax.set_title('Adsorption Loading of Each Component at Different Dosages')
+
+    # Adding a grid for better readability
+    ax.grid(True)
+
+    # Adding legend to identify each component
+    ax.legend()
+    return fig
+
