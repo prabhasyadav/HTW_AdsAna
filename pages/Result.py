@@ -3,21 +3,49 @@ from calculations import *
 import pandas as pd
 st.set_page_config(page_title="Result")
 
+st.markdown("""
+<style>
+	.stTabs [data-baseweb="tab-list"] {
+		background-color: #527a8a;
+        padding: 0px 10px 0px 10px;
+        border-radius: 10px
+    }
+
+    .stTabs [data-baseweb="tab"] p{
+        font-size: 1rem;
+        color: white;
+        font-weight: 700;
+    }
+
+	.stTabs [aria-selected="true"] p{
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-shadow: black 2px 2px 5px;
+	}
+</style>""", unsafe_allow_html=True
+)
 st.write("# Results")
+with st.sidebar:
+    use_corr_val = st.checkbox("Use Corrected Values", value=False)
+    st.session_state['corr_val_choice'] = use_corr_val
+
 tab1, tab2, tab3, tab4 = st.tabs(["Result", "Concentration Distribution", "Diagrams", "Download Result"])
 
 if 'dosage_lst' not in st.session_state.keys():
     st.info('No input data. Please input data to process calculations.')
-else:  
+else:          
     c_calc_lst = st.session_state['c_calc_lst']
     q_calc_lst = st.session_state['q_calc_lst']
-
-    c_exp_lst = st.session_state['c_exp_lst']
+    if st.session_state['corr_val_choice']:
+        c_exp_lst = st.session_state['corr_c_exp_lst']
+        c0 = st.session_state['corr_c0']
+    else:
+        c_exp_lst = st.session_state['c_exp_lst']
+        c0 = st.session_state['c0']
     q_exp_lst = st.session_state['q_exp_lst']
 
     dosage_lst = st.session_state['dosage_lst']
-    K = st.session_state['K']
-    c0 = st.session_state['c0']
+    K = st.session_state['K']    
     n = st.session_state['n']
     with tab1:
         x_data = np.array(range(1, len(dosage_lst)+1))
@@ -40,10 +68,10 @@ else:
         error = calculate_error_percentage(c_exp_lst, q_exp_lst, c_calc, q_calc)
         col1, col2 = st.columns([1.5,4.5])
         with col1:
-            st.subheader("Error % : ")
+            st.subheader("Error : ")
         with col2:
             st.markdown(f'''
-            <h3 class=value_text>{error[0]}</h3>''', unsafe_allow_html=True)
+            <h3 class=value_text>{round(error[0], 2)}%</h3>''', unsafe_allow_html=True)
             st.markdown('''
             <style>
                 h3.value_text{
@@ -89,24 +117,3 @@ else:
 
 
 
-st.markdown("""
-<style>
-	.stTabs [data-baseweb="tab-list"] {
-		background-color: #527a8a;
-        padding: 0px 10px 0px 10px;
-        border-radius: 10px
-    }
-
-    .stTabs [data-baseweb="tab"] p{
-        font-size: 1rem;
-        color: white;
-        font-weight: 700;
-    }
-
-	.stTabs [aria-selected="true"] p{
-        font-size: 1.1rem;
-        font-weight: 700;
-        text-shadow: black 2px 2px 5px;
-	}
-</style>""", unsafe_allow_html=True
-)
