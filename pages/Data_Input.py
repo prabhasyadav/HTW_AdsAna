@@ -1,5 +1,4 @@
 import streamlit as st
-# from streamlit_theme import st_theme
 import pandas as pd
 import numpy as np
 from process_data import *
@@ -50,6 +49,21 @@ with tab1:
         except Exception as e:
             print("Error in reading file:", e)
             st.error('Invalid File Format')
+    elif input_file == None and 'dosage_lst' not in st.session_state.keys():
+        input_file = './input_def.csv'
+        try:
+            mA_VL, ci, qi, K, n, c0, sac0 = read_csv_and_extract_columns(input_file)    
+        except Exception as e:
+            print("Error in reading file:", e)
+            st.error('Invalid File Format')
+    elif input_file == None and 'dosage_lst' in st.session_state.keys():
+        mA_VL = st.session_state['dosage_lst']
+        ci = st.session_state['c_exp_lst']
+        qi = st.session_state['q_exp_lst']
+        K = st.session_state['K']
+        n = st.session_state['n']
+        c0 = st.session_state['c0']
+        sac0 = st.session_state['sac0']
     st.divider()
 
     col1, col2 = st.columns(2, gap="large")
@@ -103,8 +117,6 @@ with tab1:
 
             st.session_state['c_calc_lst']=[]
             st.session_state['q_calc_lst']=[]
-            
-            correction_btn = st.button("Data Correction")
 
             st.success("Data input successfully.")
         except Exception as e:
