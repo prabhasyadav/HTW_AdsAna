@@ -25,9 +25,11 @@ st.markdown("""
 </style>""", unsafe_allow_html=True
 )
 st.write("# Results")
-with st.sidebar:
-    use_corr_val = st.checkbox("Use Corrected Values", value=False)
-    st.session_state['corr_val_choice'] = use_corr_val
+st.session_state['corr_val_choice'] = False
+if 'corr_c0' in st.session_state.keys():
+    with st.sidebar:
+        use_corr_val = st.checkbox("Use Corrected Values", value=False)
+        st.session_state['corr_val_choice'] = use_corr_val
 
 tab1, tab2, tab3, tab4 = st.tabs(["Result", "Concentration Distribution", "Diagrams", "Download Result"])
 
