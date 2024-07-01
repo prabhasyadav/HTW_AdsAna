@@ -30,7 +30,7 @@ st.markdown("""
 
 st.write("# Data Input")
 
-tab1, tab2 = st.tabs(["Input Data", "View Current Data"])
+tab1, tab2, tab3 = st.tabs(["Input Data", "View Current Data", "Input Data Visualization"])
 
 with tab1:
 
@@ -172,6 +172,10 @@ with tab2:
             st.subheader("Adsorption Components")
             ads_input_df = pd.DataFrame({"K": st.session_state['K'], "n":st.session_state['n']})
             st.dataframe(ads_input_df, use_container_width=True)
+        st.divider()
+        input_data_csv = download_input_csv()
+        st.download_button("Download as CSV", input_data_csv, "iso_input.csv", "text/csv", key='download-csv')
+
 
 
 
