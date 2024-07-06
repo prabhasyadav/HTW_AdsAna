@@ -1,4 +1,4 @@
-from scipy.optimize import minimize, curve_fit
+from scipy.optimize import minimize, curve_fit, fsolve
 import numpy as np
 import random
 import streamlit as st
@@ -16,6 +16,9 @@ q_calc_lst=[]
 def initialize_fractions(K, n, c0):
     return [{'K': K[i], 'n': n[i], 'c0': c0} for i in range(len(K))]
 
+# Single-solute isotherm model: Freundlich isotherm
+def freundlich_isotherm(c, K, n):
+    return K * np.power(c, n)
 # Calculate starting values for φ and qT
 def calculate_starting_values(c0_T, K, n, mA_VL):
     qT_start = 0.99 * c0_T / mA_VL
@@ -72,6 +75,14 @@ def polynomial_fit(x, a, b, c, d):
 def exponential_decay_fit(x, a, b, c):
     """ Exponential decay function for fitting. """
     return a * np.exp(-b * x) + c
+
+def double_exponential_decay_fit(x, a1, b1, c1, a2, b2, c2):
+    """ Double exponential decay function for fitting. """
+    return a1 * np.exp(-b1 * x) + c1 + a2 * np.exp(-b2 * x) + c2
+
+def linear_fit(x, m, b):
+    """ Linear function for fitting. """
+    return m * x + b
 
 #Fitting method
 def adjust_values_with_fits(x_data, y_data_exp, y_data_calc, fit_func):
@@ -291,4 +302,98 @@ def plot_loading_components(dosage_lst, qi_df):
     # Adding legend to identify each component
     ax.legend()
     return fig
+
+def run_single_solute(df):
+    # Extract data for fitting
+    c_data = df["c"]
+    q_data = df["q"]
+
+    # Fit the Freundlich isotherm model to the data
+    params, covariance = curve_fit(freundlich_isotherm, c_data, q_data)
+
+    # Extract the K and n parameters
+    K, n = params
+
+    # Calculate the fitted values
+    df['q_calculated'] = freundlich_isotherm(c_data, K, n)
+
+    # Display the dataframe with calculated values
+    # print("\nSingle Solute Isotherm Data")
+    # print(df)
+
+
+
+    # # Return the K and n parameters
+    # print("\nSingle Solute Isotherm values of K and n: ")
+    # print("K: ", int(K))
+    # print("n: ", n)
+    return [df, K, n]
+
+def fit_and_predict2(x_data, y_data, method='polynomial', level=0, scale_factor=1.0):
+    if method == 'polynomial':
+        popt, _ = curve_fit(polynomial_fit, x_data, y_data, p0=[1, 1, 1, 1, 1, 1])
+        fitted_values = polynomial_fit(x_data, *popt)
+    elif method == 'double_exponential':
+        popt, _ = curve_fit(double_exponential_decay_fit, x_data, y_data, p0=[1, 1, 1, 1, 1, 1])
+        fitted_values = double_exponential_decay_fit(x_data, *popt)
+    elif method == 'linear':
+        popt, _ = curve_fit(linear_fit, x_data, y_data, p0=[1, 1])
+        fitted_values = linear_fit(x_data, *popt)
+    else:
+        raise ValueError("Method must be 'polynomial', 'double_exponential', or 'linear'")
+
+    if level > 0:
+        noise = level * np.random.normal(size=fitted_values.shape)
+        fitted_values += noise
+
+
+    fitted_values = np.abs(fitted_values) * scale_factor
+
+    fitted_values = np.sort(fitted_values)[::-1]
+
+    return list(fitted_values), popt
+
+def iast_equations(vars, initial_concentrations, K_values, n_values, adsorbent_dose):
+    qT, Pi = vars
+    eq1 = sum(
+        (initial_concentrations[i] / (adsorbent_dose * qT + n_values[i] * Pi / K_values[i])) ** (1 / n_values[i]) for i
+        in range(len(K_values))) - 1
+    eq2 = sum(1 / (n_values[i] * Pi) * (
+                initial_concentrations[i] / (adsorbent_dose * qT + n_values[i] * Pi / K_values[i])) ** (1 / n_values[i])
+              for i in range(len(K_values))) - 1 / qT
+    return [eq1, eq2]
+ 
+def calculate_iast_prediction(initial_concentrations, K_values, n_values, adsorbent_doses):
+    equilibrium_concentrations_aggregated = []
+    equilibrium_loadings_aggregated = []
+
+    for adsorbent_dose in adsorbent_doses:
+        qT, Pi = fsolve(iast_equations, [10, 10], args=(initial_concentrations, K_values, n_values, adsorbent_dose))
+        equilibrium_concentrations = [
+            (initial_concentrations[i] / (adsorbent_dose * qT + n_values[i] * Pi / K_values[i])) ** (1 / n_values[i])
+            for i in range(len(K_values))]
+        equilibrium_loadings = [equilibrium_concentrations[i] * qT for i in range(len(K_values))]
+        equilibrium_concentrations_aggregated.append(np.mean(equilibrium_concentrations))
+        equilibrium_loadings_aggregated.append(np.mean(equilibrium_loadings))
+
+    return equilibrium_concentrations_aggregated, equilibrium_loadings_aggregated
+
+def mean_percentage_error(calculated, experimental):
+    percentage_error = np.abs((experimental - calculated) / experimental) * 100
+    mean_error = np.mean(percentage_error)
+    return mean_error
+
+def iast_without_correction(adsorbent_doses,K_values,n_values,initial_concentrations, c_MP, q_MP):
+    x_data = np.array(range(1, len(c_MP) + 1))
+
+    # Fit and predict with scale factor to underestimate values
+    c_vals, _ = fit_and_predict2(x_data, c_MP, method='linear', scale_factor=0.3)
+    q_vals, _ = fit_and_predict2(x_data, q_MP, method='linear', scale_factor=0.3)
+
+
+    # Calculate IAST prediction without correction
+    equilibrium_concentrations, equilibrium_loadings = calculate_iast_prediction(initial_concentrations, K_values, n_values, adsorbent_doses)
+    # print_three_columns(adsorbent_doses, c_vals, q_vals, "Dosage", "Calculated Concentration", "Calculated Loading")
+    mean_error = mean_percentage_error(q_vals, q_MP)
+    return adsorbent_doses, c_vals, q_vals, mean_error
 

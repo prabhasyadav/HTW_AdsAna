@@ -31,7 +31,7 @@ if 'corr_c0' in st.session_state.keys():
         use_corr_val = st.checkbox("Use Corrected Values", value=False)
         st.session_state['corr_val_choice'] = use_corr_val
 
-tab1, tab2, tab3, tab4 = st.tabs(["Result", "Concentration Distribution", "Diagrams", "Download Result"])
+tab1, tab2, tab3, tab4 = st.tabs(["IAST Result", "Competetive Ads Result", "Diagrams", "Download Result"])
 
 if 'dosage_lst' not in st.session_state.keys():
     st.info('No input data. Please input data to process calculations.')
@@ -82,9 +82,7 @@ else:
                     color: white;
                 }
             </style>''', unsafe_allow_html=True)
-    with tab2:       
-
-        #show ci for all components at all dosage
+                #show ci for all components at all dosage
         st.subheader("Calculated Concentration at all dosage")
         ci = get_ci(x[-1], dosage_lst, c_calc, K)
         st.dataframe(ci, use_container_width=True)
@@ -93,6 +91,39 @@ else:
         st.subheader("Calculated Adsorption at all dosage")
         qi = get_qi(x[-1], dosage_lst, q_calc, K)
         st.dataframe(qi, use_container_width=True)
+
+        
+
+    with tab2:  
+        mA_VL_mp = st.session_state['mA_VL_mp']
+        c_mp = st.session_state['c_mp']
+        q_mp = st.session_state['q_mp']
+        
+        mA_VL_ss = st.session_state['mA_VL_ss']  
+        c_ss = st.session_state['c_ss']
+        q_ss = st.session_state['q_ss']
+        c0_mp = st.session_state['c0_mp']
+        df_ss = pd.DataFrame({
+            "Dosage": mA_VL_ss,
+            "c": c_ss,
+            "q": q_ss
+        })    
+        single_solute = run_single_solute(df_ss)
+        df_single, K_single, n_single = single_solute
+
+        K_values = K + [K_single]
+        K_values[0] = 0.001
+        n_values = n + [n_single]
+        n_values[0] = 0.001
+
+        initial_concentrations = [x[0][0], x[0][1], x[0][2], c0_mp]
+        
+        adsorbent_doses, c_without_corrected, q_without_corrected, mean_error = iast_without_correction(mA_VL_mp, K_values, n_values, initial_concentrations, c_mp, q_mp)
+        iast_wo_corr_df = pd.DataFrame({'Dosage':adsorbent_doses, 'Calc Concentration': c_without_corrected, 'Calc Loading': q_without_corrected})
+        st.dataframe(iast_wo_corr_df)
+        st.markdown(f"""<h4>Mean Error: {mean_error}</h4>""", unsafe_allow_html=True)
+
+
 
     with tab3:
         with st.expander("Plot Doc Curve"):
