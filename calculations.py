@@ -226,10 +226,10 @@ def get_ci(dist, dosage_lst, c, K):
         ci_data.append(dosage_data)
 
     # Convert data into a DataFrame for better presentation
-    ci_df = pd.DataFrame(ci_data, index=[f"Dosage {d}" for d in dosage_lst],
+    ci_df = pd.DataFrame(ci_data, index=[f"Dosage {d} mg.C/L" for d in dosage_lst],
                          columns=[f"Component {i}" for i in range(len(dist))])
 
-    ci_df['Total Conc'] = c
+    ci_df['Total Conc (mg.C/L)'] = c
 
     return ci_df
 
@@ -245,10 +245,10 @@ def get_qi(dist, dosage_lst, q, K):
         qi_data.append(dosage_data)
 
     # Convert data into a DataFrame for better presentation
-    qi_df = pd.DataFrame(qi_data, index=[f"Dosage {d}" for d in dosage_lst],
+    qi_df = pd.DataFrame(qi_data, index=[f"Dosage {d} mg.C/L" for d in dosage_lst],
                          columns=[f"Component {i}" for i in range(len(dist))])
 
-    qi_df['Total Loading'] = q
+    qi_df['Total Loading (mg.C/g)'] = q
     return qi_df
 
 def plot_doc_curve(c_conc, exp_c, exp_q, calc_loading):
@@ -389,8 +389,8 @@ def plot_dosage_vs_concentration(dosage, concentration, calculated_concentration
 
 def run_single_solute(df):
     # Extract data for fitting
-    c_data = df["c"]
-    q_data = df["q"]
+    c_data = df["c (mg.C/L)"]
+    q_data = df["q (mg.C/g)"]
 
     # Fit the Freundlich isotherm model to the data
     params, covariance = curve_fit(freundlich_isotherm, c_data, q_data)
@@ -399,7 +399,7 @@ def run_single_solute(df):
     K, n = params
 
     # Calculate the fitted values
-    df['q_calculated'] = freundlich_isotherm(c_data, K, n)
+    df['calc q (mg.C/g)'] = freundlich_isotherm(c_data, K, n)
 
     # Display the dataframe with calculated values
     # print("\nSingle Solute Isotherm Data")
@@ -565,7 +565,7 @@ def run_trm(K_DOC, n_DOC, c0_MP, mA_VL_MP, c_MP, c0_DOC, ci_DOC, qi_DOC, q_MP, c
         q_MP_calc, params = fit_and_predict(x_data, q_MP, method='polynomial')
 
 
-    df = pd.DataFrame({"Dosage": mA_VL_MP, "MP Calculated Concentration": c_MP_calc, "MP Calculated Loading": q_MP_calc})
+    df = pd.DataFrame({"MP Calc Conc (mg.C/L)": c_MP_calc, "MP Calc Loading (mg.C/g)": q_MP_calc}, index=[f"Dosage {d} mg.C/L" for d in mA_VL_MP])
 
 
     # Calculate mean percentage error

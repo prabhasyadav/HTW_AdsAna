@@ -30,7 +30,7 @@ st.markdown("""
 
 st.write("# Data Input")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Iso Data Input", "Competetive Ads Data Input","View Current Data", "Input Data Visualization"])
+tab1, tab2, tab3, tab4 = st.tabs(["Iso Data Input", "Competetive Ads Data Input","View DOC Data", "View Competetive Ads Data"])
 
 with tab1:
 
@@ -123,21 +123,21 @@ with tab1:
         except Exception as e:
             st.error(f"Something went wrong while loading the input data. Please try again. {e}")
 
-    if 'dosage_lst' in st.session_state.keys():
-        with st.popover("Data Correction"):
-            a0, a1, r, fig = data_correction(st.session_state['q_exp_lst'], st.session_state['c_exp_lst'])
-            st.markdown(f"""
-                <h5>a0: {a0}</h5>
-                <h5>a1: {a1}</h5>
-                <h5>r: {r}</h5>
-            """, unsafe_allow_html=True)
-            st.pyplot(fig)
-            apply_corr_btn = st.button("Apply Correction")
-            if apply_corr_btn:
-                corr_c_exp_lst = a0 + a1 * st.session_state['q_exp_lst']
-                corr_c0 = a0 + a1 * st.session_state['sac0']
-                st.session_state['corr_c_exp_lst'] = corr_c_exp_lst
-                st.session_state['corr_c0'] = corr_c0
+    # if 'dosage_lst' in st.session_state.keys():
+        # with st.popover("Data Correction"):
+        #     a0, a1, r, fig = data_correction(st.session_state['q_exp_lst'], st.session_state['c_exp_lst'])
+        #     st.markdown(f"""
+        #         <h5>a0: {a0}</h5>
+        #         <h5>a1: {a1}</h5>
+        #         <h5>r: {r}</h5>
+        #     """, unsafe_allow_html=True)
+        #     st.pyplot(fig)
+        #     apply_corr_btn = st.button("Apply Correction")
+        #     if apply_corr_btn:
+        #         corr_c_exp_lst = a0 + a1 * st.session_state['q_exp_lst']
+        #         corr_c0 = a0 + a1 * st.session_state['sac0']
+        #         st.session_state['corr_c_exp_lst'] = corr_c_exp_lst
+        #         st.session_state['corr_c0'] = corr_c0
 
 with tab2:
     # st.subheader('Competetive Adsorption Data Input')
@@ -207,18 +207,22 @@ with tab2:
 
     comp_ads_submit_btn = st.button("Submit", key='submit_comp_ads')
     if comp_ads_submit_btn:
-        st.session_state['c0_mp'] = c0_mp
-        st.session_state['mA_VL_mp'] = mA_VL_mp
-        st.session_state['c_mp'] = c_mp
-        st.session_state['q_mp'] = q_mp
+        try:
+            st.session_state['c0_mp'] = c0_mp
+            st.session_state['mA_VL_mp'] = mA_VL_mp
+            st.session_state['c_mp'] = c_mp
+            st.session_state['q_mp'] = q_mp
 
-        st.session_state['c0_ss'] = c0_ss
-        st.session_state['mA_VL_ss'] = mA_VL_ss
-        st.session_state['c_ss'] = c_ss
+            st.session_state['c0_ss'] = c0_ss
+            st.session_state['mA_VL_ss'] = mA_VL_ss
+            st.session_state['c_ss'] = c_ss
 
-        V = 1 
-        q_ss = np.subtract(c0_ss, np.array(c_ss)) * V / mA_VL_ss
-        st.session_state['q_ss'] = q_ss
+            V = 1 
+            q_ss = np.subtract(c0_ss, np.array(c_ss)) * V / mA_VL_ss
+            st.session_state['q_ss'] = q_ss
+            st.success("Data input successfully.")
+        except Exception as e:
+            st.error(f"Something went wrong while loading the input data. Please try again. {e}")
 with tab3:
     if 'dosage_lst' not in st.session_state.keys():
         st.info("No input data added yet.")
@@ -228,9 +232,10 @@ with tab3:
         with col1:
             st.subheader("Isotherm Data")
             if 'corr_c_exp_lst' in st.session_state.keys():
-                iso_input_df = pd.DataFrame({"mA/VL":st.session_state['dosage_lst'], "DOC":st.session_state['c_exp_lst'], "SAC":st.session_state['q_exp_lst'], "Corrected DOC": st.session_state['corr_c_exp_lst']})
+                iso_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['dosage_lst'], "c (mg.C/L)":st.session_state['c_exp_lst'], "q (mg.C/g)":st.session_state['q_exp_lst'], "Corrected DOC": st.session_state['corr_c_exp_lst']})
             else:
-                iso_input_df = pd.DataFrame({"mA/VL":st.session_state['dosage_lst'], "DOC":st.session_state['c_exp_lst'], "SAC":st.session_state['q_exp_lst']})
+                iso_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['dosage_lst'], "c (mg.C/L)":st.session_state['c_exp_lst'], "q (mg.C/g)":st.session_state['q_exp_lst']})
+            iso_input_df.index += 1
             st.dataframe(iso_input_df, use_container_width=True)
         with col2:
             st.html('''<style>
@@ -249,11 +254,54 @@ with tab3:
                     <p class="value_text">Corrected c0 : {round(st.session_state['corr_c0'], 2)}</p>''', unsafe_allow_html=True)
             st.divider()
             st.subheader("Adsorption Components")
-            ads_input_df = pd.DataFrame({"K": st.session_state['K'], "n":st.session_state['n']})
+            ads_input_df = pd.DataFrame({"K": st.session_state['K'], "n":st.session_state['n']}, index=[f"Component {i}" for i in range(len(K))])
             st.dataframe(ads_input_df, use_container_width=True)
         st.divider()
         input_data_csv = download_input_csv()
-        st.download_button("Download as CSV", input_data_csv, "iso_input.csv", "text/csv", key='download-csv')
+        st.download_button("Download ISO Data", input_data_csv, "iso_input.csv", "text/csv", key='download-iso-csv')
+
+with tab4:
+    if 'c0_mp' not in st.session_state.keys():
+        st.info("No input data added yet.")
+    else:
+        col1, col2 = st.columns(2, gap="medium")
+        
+        with col1:
+            st.subheader("Micro Pollutant Data")
+            st.html('''<style>
+                    p.value_text{
+                            padding-top: 0.25rem;
+                            font-size: 1.5rem;
+                            color: white;
+                    }
+                    </style>''')
+            st.markdown(f'''
+                <p class="value_text">c0 Value : {round(st.session_state['c0_mp'], 2)}</p>''', unsafe_allow_html=True)
+            mp_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['mA_VL_mp'], "c (mg.C/L)":st.session_state['c_mp'], "q (mg.C/g)":st.session_state['q_mp']})
+            mp_input_df.index += 1
+            st.dataframe(mp_input_df, use_container_width=True)
+            st.divider()
+            mp_input_data_csv = download_mp_csv()
+            st.download_button("Download Micro Pollutant Data", mp_input_data_csv, "micropollutant_input.csv", "text/csv", key='download-mp-csv')
+        with col2:            
+            st.subheader("Single Solute Data")
+            st.html('''<style>
+                    p.value_text{
+                            padding-top: 0.25rem;
+                            font-size: 1.5rem;
+                            color: white;
+                    }
+                    </style>''')
+            st.markdown(f'''
+                <p class="value_text">c0 Value : {round(st.session_state['c0_ss'], 2)}</p>''', unsafe_allow_html=True)
+            ss_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['mA_VL_ss'], "c (mg.C/L)":st.session_state['c_ss']})
+            ss_input_df.index += 1
+            st.dataframe(ss_input_df, use_container_width=True)
+            st.divider()
+            ss_input_data_csv = download_ss_csv()
+            st.download_button("Download Single Solute Data", ss_input_data_csv, "singlesolute_input.csv", "text/csv", key='download-ss-csv')
+
+
 
 
 
