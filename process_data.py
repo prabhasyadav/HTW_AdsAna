@@ -25,6 +25,26 @@ def read_csv_and_extract_columns(filename):
 
     return mA_VL, ci, qi, K, n, c0, sac0
 
+def read_mp_data_file(filename):
+    df = pd.read_csv(filename)
+    mA_VL = df['mA/VL'].tolist()
+    ci = df['ci'].tolist()
+    qi = df['qi'].tolist()
+    c0 = float(df['c0'][0])
+
+    return np.array(mA_VL), np.array(ci), np.array(qi), c0
+
+def read_ss_data_file(filename):
+    V = 1 # L
+    df = pd.read_csv(filename)
+    mA_VL = df['mA/VL'].tolist()
+    ci = df['ci'].tolist()
+    c0 = float(df['c0'][0])
+
+    return mA_VL, ci, c0
+
+
+
 def data_correction(x, y):
     result = stats.linregress(x, y)
     fig, ax = plt.subplots(figsize=(10, 6))
