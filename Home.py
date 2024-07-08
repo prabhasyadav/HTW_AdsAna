@@ -13,33 +13,33 @@ st.markdown(
         <h2>Current Features:</h2>
         <ul>
         <li>Data Input with File Upload and Editing</li>
-        <li>Data Correction</li>
+        <li>Competetive Adsorption Analysis with TRM Model</li>
         <li>Result Generation</li>
         <li>Result Visualization</li>
         </ul>    
         <h2>Step-by-Step Guide:</h2>
         <h3>Data Input:</h3>
         <ul>
-        <li>Go to <strong>Data Input</strong> page and then <strong>Input Data</strong> tab.</li>
+        <li>Go to <strong>Data Input</strong> page and then <strong>Iso Input Data</strong> tab.</li>
         <li>You can edit the preexisting input data or upload a new CSV data file.</li>
         <li>Press the <strong>Submit</strong> button to load the input data.</li>
         </ul>    
-        <h3>Data Correction:</h3>
+        <h3>Competetive Adsorption Analysis:</h3>
         <ul>
-        <li>After loading the input data, click on <strong>Data Correction</strong> to open a pop-up with data correction parameters.</li>
-        <li>To apply data correction, click on the <strong>Apply Data Correction</strong> button on the pop-up.</li>
+        <li>Go to <strong>Data Input</strong> page and then <strong>Competetive Ads Data Input</strong> tab.</li>
+        <li>You can upload a new CSV data files for Micropollutant and Single solute data and edit the loaded data.</li>
+        <li>Press the <strong>Submit</strong> button to load the input data.</li>
         </ul>
         <h3>View Input Data:</h3>
         <ul>
-        <li>Go to <strong>View Current Data</strong> tab on <strong>Data Input</strong> page to view the current input data along with any corrections applied.</li>
-        <li>Click on <strong>Download as CSV</strong> button to download the input data as a CSV file.</li>
+        <li>Go to <strong>View DOC Data</strong> or <strong>View Competetive Ads Data</strong> tab on <strong>Data Input</strong> page to view the current input data along.</li>
+        <li>Click on the <strong>Download</strong> button to download the respective input data as a CSV file.</li>
         </ul>
         <h3>Result Generation:</h3>
         <ul>
         <li>Go to <strong>Results</strong> page to view the calculated results.</li>
-        <li><strong>Result</strong> tab contains calculated concentration and adsorption, concentration distribution and calculated error.</li>
-        <li><strong>Concentration Distribution</strong> tab contains calculated concentration and adsorption of the components as different dosages.</li>
-        <li>To generate results using corrected values, check the <strong>Use Corrected Values</strong> option in the sidebar.</li>
+        <li><strong>IAST Result</strong> tab contains calculated concentration and adsorption, concentration distribution and calculated error. Additionally, it also presents calculated concentration and adsorption of the components as different dosages</li>
+        <li><strong>Competetive Ads Result</strong> tab contains the IAST calculation w.r.t to the provided Multipollutant and Single solute data and corrected data using TRM model.</li>
         </ul>
         <h3>Result Visualization:</h3>
         <ul>

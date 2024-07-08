@@ -64,3 +64,18 @@ def download_input_csv():
     sac0 = st.session_state['sac0']
     input_data_df = pd.DataFrame({'mA/VL':pd.Series(dosage_lst), 'ci':pd.Series(c_exp_lst), 'qi':pd.Series(q_exp_lst), 'K':pd.Series(k), 'n':pd.Series(n), 'c0':pd.Series(c0), 'sac0':pd.Series(sac0)})
     return input_data_df.to_csv(index=False).encode('utf-8')
+
+def download_mp_csv():
+    dosage_lst = st.session_state['mA_VL_mp']
+    mp_c_lst = st.session_state['c_mp']
+    mp_q_lst = st.session_state['q_mp']
+    c0 = st.session_state['c0_mp']
+    input_data_df = pd.DataFrame({'mA/VL':pd.Series(dosage_lst), 'ci':pd.Series(mp_c_lst), 'qi':pd.Series(mp_q_lst), 'c0':pd.Series(c0)})
+    return input_data_df.to_csv(index=False).encode('utf-8')
+
+def download_ss_csv():
+    dosage_lst = st.session_state['mA_VL_ss']
+    ss_c_lst = st.session_state['c_ss']
+    c0 = st.session_state['c0_ss']
+    input_data_df = pd.DataFrame({'mA/VL':pd.Series(dosage_lst), 'ci':pd.Series(ss_c_lst), 'c0':pd.Series(c0)})
+    return input_data_df.to_csv(index=False).encode('utf-8')
