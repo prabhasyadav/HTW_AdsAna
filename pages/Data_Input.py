@@ -45,14 +45,14 @@ with tab1:
     qi = [] 
     if input_file:
         try:
-            mA_VL, ci, qi, K, n, c0, sac0 = read_csv_and_extract_columns(input_file)    
+            mA_VL, ci, qi, K, n, c0 = read_csv_and_extract_columns(input_file)    
         except Exception as e:
             print("Error in reading file:", e)
             st.error('Invalid File Format')
     elif input_file == None and 'dosage_lst' not in st.session_state.keys():
         input_file = './input_def.csv'
         try:
-            mA_VL, ci, qi, K, n, c0, sac0 = read_csv_and_extract_columns(input_file)    
+            mA_VL, ci, qi, K, n, c0 = read_csv_and_extract_columns(input_file)    
         except Exception as e:
             print("Error in reading file:", e)
             st.error('Invalid File Format')
@@ -63,14 +63,14 @@ with tab1:
         K = st.session_state['K']
         n = st.session_state['n']
         c0 = st.session_state['c0']
-        sac0 = st.session_state['sac0']
+        # sac0 = st.session_state['sac0']
     st.divider()
 
     col1, col2 = st.columns(2, gap="large")
     with col1:    
         st.subheader("Initial Concentrations")
         c0 = st.number_input("c0 value", value=c0, key='iso_c0')
-        sac0 = st.number_input("SAC0", value=sac0)
+        # sac0 = st.number_input("SAC0", value=sac0)
 
         st.subheader("Adsorption Parameters")
         # adsorbable_num = st.selectbox("Number of Adsorption Components", [1,2,3,4,5,6])
@@ -114,7 +114,7 @@ with tab1:
             st.session_state['q_exp_lst'] = isotherm_df['qi'].to_numpy()
 
             st.session_state['c0'] = c0
-            st.session_state['sac0'] = sac0
+            # st.session_state['sac0'] = sac0
 
             st.session_state['c_calc_lst']=[]
             st.session_state['q_calc_lst']=[]
@@ -242,13 +242,12 @@ with tab3:
                     p.value_text{
                             padding-top: 0.25rem;
                             font-size: 1.5rem;
-                            color: white;
                     }
                     </style>''')
             st.markdown(f'''
                 <p class="value_text">c0 Value : {round(st.session_state['c0'], 2)}</p>''', unsafe_allow_html=True)
-            st.markdown(f'''
-                <p class="value_text">SAC0 Value : {round(st.session_state['sac0'], 2)}</p>''', unsafe_allow_html=True)
+            # st.markdown(f'''
+            #     <p class="value_text">SAC0 Value : {round(st.session_state['sac0'], 2)}</p>''', unsafe_allow_html=True)
             if 'corr_c0' in st.session_state.keys():
                 st.markdown(f'''
                     <p class="value_text">Corrected c0 : {round(st.session_state['corr_c0'], 2)}</p>''', unsafe_allow_html=True)
@@ -272,7 +271,6 @@ with tab4:
                     p.value_text{
                             padding-top: 0.25rem;
                             font-size: 1.5rem;
-                            color: white;
                     }
                     </style>''')
             st.markdown(f'''
@@ -289,7 +287,6 @@ with tab4:
                     p.value_text{
                             padding-top: 0.25rem;
                             font-size: 1.5rem;
-                            color: white;
                     }
                     </style>''')
             st.markdown(f'''
