@@ -21,9 +21,9 @@ def read_csv_and_extract_columns(filename):
 
     # Extract c0 as a float variable from the first row
     c0 = float(df['c0'][0])
-    sac0 = float(df['sac0'][0])
+    # sac0 = float(df['sac0'][0])
 
-    return mA_VL, ci, qi, K, n, c0, sac0
+    return mA_VL, ci, qi, K, n, c0
 
 def read_mp_data_file(filename):
     df = pd.read_csv(filename)
@@ -61,8 +61,8 @@ def download_input_csv():
     k = st.session_state['K']
     n = st.session_state['n']
     c0 = st.session_state['c0']
-    sac0 = st.session_state['sac0']
-    input_data_df = pd.DataFrame({'mA/VL':pd.Series(dosage_lst), 'ci':pd.Series(c_exp_lst), 'qi':pd.Series(q_exp_lst), 'K':pd.Series(k), 'n':pd.Series(n), 'c0':pd.Series(c0), 'sac0':pd.Series(sac0)})
+    # sac0 = st.session_state['sac0']
+    input_data_df = pd.DataFrame({'mA/VL':pd.Series(dosage_lst), 'ci':pd.Series(c_exp_lst), 'qi':pd.Series(q_exp_lst), 'K':pd.Series(k), 'n':pd.Series(n), 'c0':pd.Series(c0)})
     return input_data_df.to_csv(index=False).encode('utf-8')
 
 def download_mp_csv():

@@ -80,7 +80,6 @@ else:
                 h3.value_text{
                     padding-top: 0.75rem;
                     font-size: 1.5rem;
-                    color: white;
                 }
             </style>''', unsafe_allow_html=True)
                 #show ci for all components at all dosage
