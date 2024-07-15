@@ -129,9 +129,12 @@ else:
             K_values[0] = 0.001
             n_values = n + [n_single]
             n_values[0] = 0.001
+            #<<------updates initial_concentrations list creation to match the number of input K and n values
+            initial_concentrations=[] 
+            for i in range(len(K_values)-1):
+                initial_concentrations.append(x[0][i])
+            initial_concentrations.append(c0_mp) #------->>
 
-            initial_concentrations = [x[0][0], x[0][1], x[0][2], c0_mp]
-            
             adsorbent_doses, c_without_corrected, q_without_corrected, mean_error = iast_without_correction(mA_VL_mp, K_values, n_values, initial_concentrations, c_mp, q_mp)
             iast_wo_corr_df = pd.DataFrame({'Exp Conc (mg.C/L)': c_mp, 'Calc Conc (mg.C/L)': c_without_corrected, 'Exp Loading (mg.C/g)': q_mp, 'Calc Loading (mg.C/g)': q_without_corrected}, index=[f"Dosage {d}" for d in adsorbent_doses])
             st.session_state['iast_wo_corr_df'] = iast_wo_corr_df
@@ -160,12 +163,12 @@ else:
             q_mp_calc = trm_df['MP Calc Loading (mg.C/g)']
 
         with st.expander("Doc Curve Plot"):
-            doc_curve_fig = plot_doc_curve(c_calc, c_exp_lst, q_exp_lst, q_calc)
+            log_plot = st.toggle("log plot", value=False)
+            if log_plot:
+                doc_curve_fig = plot_doc_log_curve(c_calc, c_exp_lst, q_exp_lst, q_calc)
+            else:
+                doc_curve_fig = plot_doc_curve(c_calc, c_exp_lst, q_exp_lst, q_calc)
             st.pyplot(doc_curve_fig)
-
-        with st.expander("Doc Log Curve Plot "):
-            doc_log_curve_fig = plot_doc_log_curve(c_calc, c_exp_lst, q_exp_lst, q_calc)
-            st.pyplot(doc_log_curve_fig)
 
         with st.expander("Dosage vs Concentration"):
             dos_con_fig = plot_dosage_vs_concentration(dosage_lst, c_exp_lst, c_calc)
@@ -187,7 +190,7 @@ else:
 
         with st.expander("TRM Plot"):
             if 'c0_mp' in st.session_state.keys():
-                trm_plot_fig = plot_trm("TRM Model", c_mp, q_mp, c_mp_calc, q_mp_calc, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
+                trm_plot_fig = plot_trm(st.session_state['name_mp'], c_mp, q_mp, c_mp_calc, q_mp_calc, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
                 st.pyplot(trm_plot_fig)
             else:
                 st.info("No Competetive Adsorption Data.")

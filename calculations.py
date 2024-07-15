@@ -452,6 +452,7 @@ def fit_and_predict2(x_data, y_data, method='polynomial', level=0, scale_factor=
 
 def iast_equations(vars, initial_concentrations, K_values, n_values, adsorbent_dose):
     qT, Pi = vars
+    print(f"initial_concentration: {len(initial_concentrations)}, adsorbent_dose: {(adsorbent_dose)}, qT:{(qT)}, n_values:{len(n_values)}, Pi, K_values")
     eq1 = sum(
         (initial_concentrations[i] / (adsorbent_dose * qT + n_values[i] * Pi / K_values[i])) ** (1 / n_values[i]) for i
         in range(len(K_values))) - 1
@@ -461,6 +462,9 @@ def iast_equations(vars, initial_concentrations, K_values, n_values, adsorbent_d
     return [eq1, eq2]
  
 def calculate_iast_prediction(initial_concentrations, K_values, n_values, adsorbent_doses):
+    # print(initial_concentrations)
+    # print(K_values)
+    # print(adsorbent_doses)
     equilibrium_concentrations_aggregated = []
     equilibrium_loadings_aggregated = []
 
