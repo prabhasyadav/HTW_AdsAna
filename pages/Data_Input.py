@@ -146,11 +146,13 @@ with tab2:
         c_mp = []
         q_mp = []
         c0_mp = 0
+        name_mp = ''
     else:
         mA_VL_mp = st.session_state['mA_VL_mp']
         c_mp = st.session_state['c_mp']
         q_mp = st.session_state['q_mp']
         c0_mp = st.session_state['c0_mp']
+        name_mp = st.session_state['name_mp']
     
     if 'mA_VL_ss' not in st.session_state.keys():
         mA_VL_ss = []
@@ -165,6 +167,7 @@ with tab2:
     col1, col2 = st.columns(2, gap="medium")
     with col1:
         mp_input_file = st.file_uploader("Upload Micropollutant File", accept_multiple_files=False)
+        mp_name = st.text_input("Micropollutant Name", value=name_mp)
         if mp_input_file:
             try:
                 mA_VL_mp, c_mp, q_mp, c0_mp = read_mp_data_file(mp_input_file)
@@ -208,6 +211,7 @@ with tab2:
     comp_ads_submit_btn = st.button("Submit", key='submit_comp_ads')
     if comp_ads_submit_btn:
         try:
+            st.session_state['name_mp'] = mp_name
             st.session_state['c0_mp'] = c0_mp
             st.session_state['mA_VL_mp'] = mA_VL_mp
             st.session_state['c_mp'] = c_mp
@@ -274,13 +278,15 @@ with tab4:
                     }
                     </style>''')
             st.markdown(f'''
+                <p class="value_text">Name : {st.session_state['name_mp']}</p>''', unsafe_allow_html=True)
+            st.markdown(f'''
                 <p class="value_text">c0 Value : {round(st.session_state['c0_mp'], 2)}</p>''', unsafe_allow_html=True)
             mp_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['mA_VL_mp'], "c (mg.C/L)":st.session_state['c_mp'], "q (mg.C/g)":st.session_state['q_mp']})
             mp_input_df.index += 1
             st.dataframe(mp_input_df, use_container_width=True)
             st.divider()
             mp_input_data_csv = download_mp_csv()
-            st.download_button("Download Micro Pollutant Data", mp_input_data_csv, "micropollutant_input.csv", "text/csv", key='download-mp-csv')
+            st.download_button("Download Micro Pollutant Data", mp_input_data_csv, f"micropollutant_input.csv", "text/csv", key='download-mp-csv')
         with col2:            
             st.subheader("Single Solute Data")
             st.html('''<style>
