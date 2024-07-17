@@ -2,7 +2,6 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Adsorption Analysis (Ver. Alpha)",
-    page_icon="👋"
 )
 
 st.write("# Adsorption Analysis Application")
