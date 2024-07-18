@@ -26,7 +26,8 @@ st.markdown("""
 	}
 
     div[data-testid="stExpander"] p {
-    font-size: 1rem;
+        font-size: 1rem;
+    }
 }
 
 </style>""", unsafe_allow_html=True
@@ -107,7 +108,7 @@ with tab1:
     col1, col2 = st.columns(2, gap="large")
     with col1:    
         st.subheader("Initial Concentrations")
-        c0 = st.number_input("c0 value", value=c0, key='iso_c0')
+        c0 = st.number_input(r"$c_O$", value=c0, key='iso_c0')
         # sac0 = st.number_input("SAC0", value=sac0)
 
         st.subheader("Adsorption Parameters")
@@ -124,15 +125,15 @@ with tab1:
         
 
     with col2:
-        
         st.subheader("Isotherm Data")
-        isotherm_df = pd.DataFrame({"mA/VL":mA_VL, "ci":ci, "qi":qi}, columns=("mA/VL", "ci", "qi"))
-        isotherm_df = isotherm_df.astype({'mA/VL':float, 'ci':float, 'qi':float})
-        isotherm_df = st.data_editor(isotherm_df,
+        isotherm_df = pd.DataFrame({"mA/VL":mA_VL, "c{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'):ci, "q{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'):qi}, columns=("mA/VL", "c{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}') , "q{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}')))
+        isotherm_df = isotherm_df.astype({'mA/VL':float, "c{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'):float, "q{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'):float})
+        styled_df = isotherm_df.style.set_properties(**{'font-size': '25pt'})
+        isotherm_df = st.data_editor(styled_df,
         column_config={
             "mA/VL": st.column_config.NumberColumn("mA/VL", help="About mA/VL parameter"),
-            "ci": st.column_config.NumberColumn("ci", help="About ci parameter"),
-            "qi": st.column_config.NumberColumn("qi", help="About qi parameter")},
+            "c{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'): st.column_config.NumberColumn("c{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'), help="About ci parameter"),
+            "q{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'): st.column_config.NumberColumn("q{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}'), help="About qi parameter")},
         use_container_width=True)
     
     st.divider()
@@ -148,8 +149,8 @@ with tab1:
             st.session_state['n'] = ads_df['n'].to_numpy()
 
             st.session_state['dosage_lst'] = isotherm_df['mA/VL'].to_numpy()
-            st.session_state['c_exp_lst'] = isotherm_df['ci'].to_numpy()
-            st.session_state['q_exp_lst'] = isotherm_df['qi'].to_numpy()
+            st.session_state['c_exp_lst'] = isotherm_df["c{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}')].to_numpy()
+            st.session_state['q_exp_lst'] = isotherm_df["q{}".format('\N{LATIN SUBSCRIPT SMALL LETTER I}')].to_numpy()
 
             st.session_state['c0'] = c0
             # st.session_state['sac0'] = sac0
@@ -199,12 +200,12 @@ with tab2:
                     }
                     </style>''')
             st.markdown(f'''
-                <p class="value_text">c0 Value : {round(st.session_state['c0'], 2)}</p>''', unsafe_allow_html=True)
+                <p class="value_text">c<sub>O</sub> Value : {round(st.session_state['c0'], 2)}</p>''', unsafe_allow_html=True)
             # st.markdown(f'''
             #     <p class="value_text">SAC0 Value : {round(st.session_state['sac0'], 2)}</p>''', unsafe_allow_html=True)
             if 'corr_c0' in st.session_state.keys():
                 st.markdown(f'''
-                    <p class="value_text">Corrected c0 : {round(st.session_state['corr_c0'], 2)}</p>''', unsafe_allow_html=True)
+                    <p class="value_text">Corrected c<sub>O</sub> : {round(st.session_state['corr_c0'], 2)}</p>''', unsafe_allow_html=True)
             st.divider()
             st.subheader("Adsorption Components")
             ads_input_df = pd.DataFrame({"K": st.session_state['K'], "n":st.session_state['n']}, index=[f"Component {i}" for i in range(len(K))])
@@ -249,7 +250,7 @@ if tab3:
                 except Exception as e:
                     st.error(f"Error: {e}") 
         with col2:
-            c0_mp = st.number_input("c0 value", value=c0_mp, key='comp_ads_c0_mp')
+            c0_mp = st.number_input(r"$c_{O}$", value=c0_mp, key='comp_ads_c0_mp')
 
             mp_df = pd.DataFrame({"mA/VL":mA_VL_mp, "c":c_mp, "q":q_mp}, columns=("mA/VL", "c", "q"))
             mp_df = mp_df.astype({'mA/VL':float, 'c':float, 'q':float})
@@ -272,7 +273,7 @@ if tab3:
                     st.error(f"Error: {e}")
         
         with col2:
-            c0_ss = st.number_input("c0 value", value=c0_ss, key='comp_ads_c0_ss')
+            c0_ss = st.number_input(r"$c_{O}$", value=c0_ss, key='comp_ads_c0_ss')
 
             ss_df = pd.DataFrame({"mA/VL":mA_VL_ss, "c":c_ss}, columns=("mA/VL", "c"))
             ss_df = ss_df.astype({'mA/VL':float, 'c':float})
@@ -320,7 +321,7 @@ if tab4:
                 st.markdown(f'''
                     <p class="value_text">Name : {st.session_state['name_mp']}</p>''', unsafe_allow_html=True)
                 st.markdown(f'''
-                    <p class="value_text">c0 Value : {round(st.session_state['c0_mp'], 2)}</p>''', unsafe_allow_html=True)
+                    <p class="value_text">c<sub>O</sub> Value : {round(st.session_state['c0_mp'], 2)}</p>''', unsafe_allow_html=True)
                 mp_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['mA_VL_mp'], "c (mg.C/L)":st.session_state['c_mp'], "q (mg.C/g)":st.session_state['q_mp']})
                 mp_input_df.index += 1
                 st.dataframe(mp_input_df, use_container_width=True)
@@ -336,7 +337,7 @@ if tab4:
                         }
                         </style>''')
                 st.markdown(f'''
-                    <p class="value_text">c0 Value : {round(st.session_state['c0_ss'], 2)}</p>''', unsafe_allow_html=True)
+                    <p class="value_text">c<sub>O</sub> Value : {round(st.session_state['c0_ss'], 2)}</p>''', unsafe_allow_html=True)
                 ss_input_df = pd.DataFrame({"mA/VL (mg.C/L)":st.session_state['mA_VL_ss'], "c (mg.C/L)":st.session_state['c_ss']})
                 ss_input_df.index += 1
                 st.dataframe(ss_input_df, use_container_width=True)
