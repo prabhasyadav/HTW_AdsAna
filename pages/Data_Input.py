@@ -24,6 +24,11 @@ st.markdown("""
         font-weight: 700;
         text-shadow: black 2px 2px 5px;
 	}
+
+    div[data-testid="stExpander"] p {
+    font-size: 1rem;
+}
+
 </style>""", unsafe_allow_html=True
 )
 
@@ -41,8 +46,14 @@ def flip_sorption_opt():
         st.session_state['comp_data_input'] = True
     else:
         st.session_state['comp_data_input'] = False
+
 with st.sidebar:
     comp_data_input = st.checkbox("Add Competetive Sorption Data", value=comp_data_input, on_change = flip_sorption_opt)
+    st.write("")
+    with st.expander("Need Sample Data?"):
+        st.link_button("Isotherm Data", "https://github.com/kansakarpratistha/HTW_AdsAna/tree/main/sample_data/sample_iso.csv")
+        st.link_button("Micro Pollutant Data", "https://github.com/kansakarpratistha/HTW_AdsAna/tree/main/sample_data/sample_mp.csv")
+        st.link_button("Single Solute Data", "https://github.com/kansakarpratistha/HTW_AdsAna/tree/main/sample_data/sample_ss.csv")
 
 if comp_data_input == False:
     sorption_data = ['mA_VL_mp', 'c_mp', 'q_mp', 'c0_mp', 'name_mp', 'mA_VL_ss', 'c_ss', 'c0_ss']
