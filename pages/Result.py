@@ -31,7 +31,15 @@ if 'corr_c0' in st.session_state.keys():
         use_corr_val = st.checkbox("Use Corrected Values", value=False)
         st.session_state['corr_val_choice'] = use_corr_val
 
-tab1, tab2, tab3, tab4 = st.tabs(["IAST Result", "Competetive Ads Result", "Diagrams", "Download Result"])
+if 'comp_data_input' in st.session_state.keys():
+    sorption_data = st.session_state['comp_data_input']
+else:
+    sorption_data = False
+
+if sorption_data:
+    iast_res, sorption_res, plot_tab = st.tabs(["IAST Result", "Competetive Sorption Result", "Plots"])
+else:
+    iast_res, plot_tab = st.tabs(["IAST Result", "Plots"])
 
 if 'dosage_lst' not in st.session_state.keys():
     st.info('No input data. Please input data to process calculations.')
@@ -49,7 +57,8 @@ else:
     dosage_lst = st.session_state['dosage_lst']
     K = st.session_state['K']    
     n = st.session_state['n']
-    with tab1:
+    
+    with iast_res:
         x_data = np.array(range(1, len(dosage_lst)+1))
         
         c_calc = adjust_values_with_fits(x_data, c_exp_lst, polynomial_fit, K) #calculated concentration
@@ -57,8 +66,8 @@ else:
 
         #---------Calculated Conc and Adsorption Result
         st.subheader("Calculated Concentration and Adsorption")
-        calc_df = pd.DataFrame({'Exp Conc (mg.C/L)':c_exp_lst, 'Calc Conc (mg.C/L)':c_calc, 'Exp Adsorption (mg.C/g)':q_exp_lst, 'Calc Adsorption (mg.C/g)':q_calc}, index=[f"Dosage {d} mg.C/L" for d in dosage_lst])
-        st.dataframe(calc_df, use_container_width=True)
+        calc_df = pd.DataFrame({'Dosage (mg.C/L)':dosage_lst, 'Exp Conc (mg.C/L)':c_exp_lst, 'Calc Conc (mg.C/L)':c_calc, 'Exp Adsorption (mg.C/g)':q_exp_lst, 'Calc Adsorption (mg.C/g)':q_calc})
+        st.dataframe(calc_df, use_container_width=True, hide_index=True)
 
         st.subheader("Concentration Distribution")
         iso_dist = []
@@ -86,77 +95,78 @@ else:
         st.divider()
         st.subheader("Calculated Concentration at all dosage")
         ci = get_ci(x[-1], dosage_lst, c_calc, K)
-        st.dataframe(ci, use_container_width=True)
+        st.dataframe(ci, use_container_width=True, hide_index=True)
         st.session_state['ci'] = ci
 
         # show qi for all components at all dosage
         st.subheader("Calculated Adsorption at all dosage")
         qi = get_qi(x[-1], dosage_lst, q_calc, K)
-        st.dataframe(qi, use_container_width=True)
+        st.dataframe(qi, use_container_width=True, hide_index=True)
 
         
+    if sorption_data:
+        with sorption_res:  
+            if 'c0_mp' in st.session_state.keys():
 
-    with tab2:  
-        if 'c0_mp' in st.session_state.keys():
+                mA_VL_mp = st.session_state['mA_VL_mp']
+                c_mp = st.session_state['c_mp']
+                q_mp = st.session_state['q_mp']
+                
+                mA_VL_ss = st.session_state['mA_VL_ss']  
+                c_ss = st.session_state['c_ss']
+                q_ss = st.session_state['q_ss']
+                c0_mp = st.session_state['c0_mp']
+                df_ss = pd.DataFrame({
+                    "Dosage (mg.C/L)": mA_VL_ss,
+                    "c (mg.C/L)": c_ss,
+                    "q (mg.C/g)": q_ss
+                }, index = [i+1 for i in range(len(mA_VL_ss))])    
+                single_solute = run_single_solute(df_ss)
+                df_single, K_single, n_single = single_solute
+                c_single = df_single['c (mg.C/L)']
+                q_single = df_single['q (mg.C/g)']
+                q_single_calc = df_single['calc q (mg.C/g)']
 
-            mA_VL_mp = st.session_state['mA_VL_mp']
-            c_mp = st.session_state['c_mp']
-            q_mp = st.session_state['q_mp']
-            
-            mA_VL_ss = st.session_state['mA_VL_ss']  
-            c_ss = st.session_state['c_ss']
-            q_ss = st.session_state['q_ss']
-            c0_mp = st.session_state['c0_mp']
-            df_ss = pd.DataFrame({
-                "Dosage (mg.C/L)": mA_VL_ss,
-                "c (mg.C/L)": c_ss,
-                "q (mg.C/g)": q_ss
-            }, index = [i+1 for i in range(len(mA_VL_ss))])    
-            single_solute = run_single_solute(df_ss)
-            df_single, K_single, n_single = single_solute
-            c_single = df_single['c (mg.C/L)']
-            q_single = df_single['q (mg.C/g)']
-            q_single_calc = df_single['calc q (mg.C/g)']
+                st.markdown("""<h4>Single Solute Isotherm Data</h4>""", unsafe_allow_html=True)
+                st.dataframe(df_single, hide_index=True)
 
-            st.markdown("""<h4>Single Solute Isotherm Data</h4>""", unsafe_allow_html=True)
-            st.dataframe(df_single)
+                st.markdown(f"""<h5>K: {round(K_single, 4)}</h5>""", unsafe_allow_html=True)
+                st.markdown(f"""<h5>n: {round(n_single, 4)}</h5>""", unsafe_allow_html=True)
+                st.divider()
 
-            st.markdown(f"""<h5>K: {round(K_single, 4)}</h5>""", unsafe_allow_html=True)
-            st.markdown(f"""<h5>n: {round(n_single, 4)}</h5>""", unsafe_allow_html=True)
-            st.divider()
+                K_values = K + [K_single]
+                K_values[0] = 0.001
+                n_values = n + [n_single]
+                n_values[0] = 0.001
+                #<<------updates initial_concentrations list creation to match the number of input K and n values
+                initial_concentrations=[] 
+                for i in range(len(K_values)-1):
+                    initial_concentrations.append(x[0][i])
+                initial_concentrations.append(c0_mp) #------->>
 
-            K_values = K + [K_single]
-            K_values[0] = 0.001
-            n_values = n + [n_single]
-            n_values[0] = 0.001
-            #<<------updates initial_concentrations list creation to match the number of input K and n values
-            initial_concentrations=[] 
-            for i in range(len(K_values)-1):
-                initial_concentrations.append(x[0][i])
-            initial_concentrations.append(c0_mp) #------->>
+                adsorbent_doses, c_without_corrected, q_without_corrected, mean_error = iast_without_correction(mA_VL_mp, K_values, n_values, initial_concentrations, c_mp, q_mp)
+                iast_wo_corr_df = pd.DataFrame({'Dosage (mg.C/L)':adsorbent_doses, 'Exp Conc (mg.C/L)': c_mp, 'Calc Conc (mg.C/L)': c_without_corrected, 'Exp Loading (mg.C/g)': q_mp, 'Calc Loading (mg.C/g)': q_without_corrected})
+                iast_wo_corr_df.index += 1
+                st.session_state['iast_wo_corr_df'] = iast_wo_corr_df
+                st.markdown("""<h4>IAST Without Correction</h4>""", unsafe_allow_html=True)
+                st.dataframe(iast_wo_corr_df, hide_index=True)
+                st.markdown(f"""<h5>Mean Error: {round(mean_error, 2)}%</h5>""", unsafe_allow_html=True)
 
-            adsorbent_doses, c_without_corrected, q_without_corrected, mean_error = iast_without_correction(mA_VL_mp, K_values, n_values, initial_concentrations, c_mp, q_mp)
-            iast_wo_corr_df = pd.DataFrame({'Exp Conc (mg.C/L)': c_mp, 'Calc Conc (mg.C/L)': c_without_corrected, 'Exp Loading (mg.C/g)': q_mp, 'Calc Loading (mg.C/g)': q_without_corrected}, index=[f"Dosage {d}" for d in adsorbent_doses])
-            st.session_state['iast_wo_corr_df'] = iast_wo_corr_df
-            st.markdown("""<h4>IAST Without Correction</h4>""", unsafe_allow_html=True)
-            st.dataframe(iast_wo_corr_df)
-            st.markdown(f"""<h5>Mean Error: {round(mean_error, 2)}%</h5>""", unsafe_allow_html=True)
+                st.divider()
 
-            st.divider()
+                K_MP_opt, n_MP_opt, trm_df, trm_mean_error = run_trm(K, n, c0_mp, mA_VL_mp, c_mp, c0, ci, qi, q_mp, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
+                st.session_state['trm_df'] = trm_df
+                st.markdown("""<h4>TRM Model</h4>""", unsafe_allow_html=True)
+                st.markdown(f"""<h5>Optimized K (Micro-Pollutant): {round(K_MP_opt, 4)}</h5>""", unsafe_allow_html=True)
+                st.markdown(f"""<h5>Optimized n (Micro-Pollutant): {round(n_MP_opt, 4)}</h5>""", unsafe_allow_html=True)
+                trm_df.insert(0, 'Exp Conc (mg.C/L)', c_mp)
+                trm_df.insert(2, 'Exp Loading (mg.C/g)', q_mp)
+                st.dataframe(trm_df, hide_index=True)
+                st.markdown(f"""<h5>Mean Error: {round(trm_mean_error,2)}%</h5>""", unsafe_allow_html=True)
+            else:
+                st.info("No Competetive Adsorption Input Data.")
 
-            K_MP_opt, n_MP_opt, trm_df, trm_mean_error = run_trm(K, n, c0_mp, mA_VL_mp, c_mp, c0, ci, qi, q_mp, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
-            st.session_state['trm_df'] = trm_df
-            st.markdown("""<h4>TRM Model</h4>""", unsafe_allow_html=True)
-            st.markdown(f"""<h5>Optimized K (Micro-Pollutant): {round(K_MP_opt, 4)}</h5>""", unsafe_allow_html=True)
-            st.markdown(f"""<h5>Optimized n (Micro-Pollutant): {round(n_MP_opt, 4)}</h5>""", unsafe_allow_html=True)
-            trm_df.insert(0, 'Exp Conc (mg.C/L)', c_mp)
-            trm_df.insert(2, 'Exp Loading (mg.C/g)', q_mp)
-            st.dataframe(trm_df)
-            st.markdown(f"""<h5>Mean Error: {round(trm_mean_error,2)}%</h5>""", unsafe_allow_html=True)
-        else:
-            st.info("No Competetive Adsorption Input Data.")
-
-    with tab3:
+    with plot_tab:
         if 'c0_mp' in st.session_state.keys():
             trm_df = st.session_state['trm_df']
             c_mp_calc = trm_df['MP Calc Conc (mg.C/L)']
@@ -187,29 +197,28 @@ else:
         
             adsorption_plot_fig = plot_adsorption(dosage_lst, component_wise_data, len(K))
             st.pyplot(adsorption_plot_fig)
+        if sorption_data:
+            with st.expander("TRM Plot"):
+                if 'c0_mp' in st.session_state.keys():
+                    trm_plot_fig = plot_trm(st.session_state['name_mp'], c_mp, q_mp, c_mp_calc, q_mp_calc, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
+                    st.pyplot(trm_plot_fig)
+                else:
+                    st.info("No Competetive Adsorption Data.")
 
-        with st.expander("TRM Plot"):
-            if 'c0_mp' in st.session_state.keys():
-                trm_plot_fig = plot_trm(st.session_state['name_mp'], c_mp, q_mp, c_mp_calc, q_mp_calc, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
-                st.pyplot(trm_plot_fig)
-            else:
-                st.info("No Competetive Adsorption Data.")
+            with st.expander("TRM Plot with Dosage"):
+                if 'c0_mp' in st.session_state.keys():
+                    trm_dos_plot = plot_trm_with_dosage(mA_VL_mp, c_mp, c_mp_calc)
+                    st.pyplot(trm_dos_plot)
+                else:
+                    st.info("No Competetive Adsorption Data.")
 
-
-        with st.expander("TRM Plot with Dosage"):
-            if 'c0_mp' in st.session_state.keys():
-                trm_dos_plot = plot_trm_with_dosage(mA_VL_mp, c_mp, c_mp_calc)
-                st.pyplot(trm_dos_plot)
-            else:
-                st.info("No Competetive Adsorption Data.")
-
-        with st.expander("IAST Plot Without Correction"):
-            if 'c0_mp' in st.session_state.keys():
-                iast_dos_plot = plot_iast_without_correction_with_dosage(mA_VL_mp, c_without_corrected, q_without_corrected) 
-                st.pyplot(iast_dos_plot)
-            else:
-                st.info("No Competetive Adsorption Data.")
-                
+            with st.expander("IAST Plot Without Correction"):
+                if 'c0_mp' in st.session_state.keys():
+                    iast_dos_plot = plot_iast_without_correction_with_dosage(mA_VL_mp, c_without_corrected, q_without_corrected) 
+                    st.pyplot(iast_dos_plot)
+                else:
+                    st.info("No Competetive Adsorption Data.")
+                    
 
         # with st.expander("Component Concentration at Different Dosages"):
         #     ci = get_ci(x[-1], dosage_lst, c_calc, K)

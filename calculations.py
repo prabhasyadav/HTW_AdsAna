@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.interpolate import make_interp_spline, interp1d, UnivariateSpline
 
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
+
 # Constants
 tolerance = 1e-6
 max_iter = 100
@@ -217,8 +220,8 @@ def convert_distribution_to_mgL(K, d, c0, dist_data):
 def get_ci(dist, dosage_lst, c, K):
     ci_data = []
 
-    for d in range(len(dosage_lst)):
-        dosage_data = []
+    for i, d in zip(dosage_lst, range(len(dosage_lst))):
+        dosage_data = [i]
         for _ in dist:
             step = _ / 100
             res = c[d] * step
@@ -226,8 +229,10 @@ def get_ci(dist, dosage_lst, c, K):
         ci_data.append(dosage_data)
 
     # Convert data into a DataFrame for better presentation
-    ci_df = pd.DataFrame(ci_data, index=[f"Dosage {d} mg.C/L" for d in dosage_lst],
-                         columns=[f"Component {i}" for i in range(len(dist))])
+    ci_col = [f"Component {i}" for i in range(len(dist))]
+    ci_col.insert(0, 'Dosage (mg.C/L)')
+    ci_df = pd.DataFrame(ci_data,
+                         columns=ci_col)
 
     ci_df['Total Conc (mg.C/L)'] = c
 
@@ -236,8 +241,8 @@ def get_ci(dist, dosage_lst, c, K):
 def get_qi(dist, dosage_lst, q, K):
     qi_data = []
 
-    for d in range(len(dosage_lst)):
-        dosage_data = []
+    for i,d in zip(dosage_lst, range(len(dosage_lst))):
+        dosage_data = [i]
         for _ in dist:
             step = _ / 100
             res = q[d] * step
@@ -245,8 +250,9 @@ def get_qi(dist, dosage_lst, q, K):
         qi_data.append(dosage_data)
 
     # Convert data into a DataFrame for better presentation
-    qi_df = pd.DataFrame(qi_data, index=[f"Dosage {d} mg.C/L" for d in dosage_lst],
-                         columns=[f"Component {i}" for i in range(len(dist))])
+    qi_col = [f"Component {i}" for i in range(len(dist))]
+    qi_col.insert(0, 'Dosage (mg.C/L)')
+    qi_df = pd.DataFrame(qi_data, columns=qi_col)
 
     qi_df['Total Loading (mg.C/g)'] = q
     return qi_df
@@ -281,15 +287,16 @@ def plot_doc_curve(c_conc, exp_c, exp_q, calc_loading):
     ax.plot(x_new, y_smooth, color='black', linestyle='-', label='Calculated Data')
 
     # Adding plot labels and title
-    ax.set_xlabel('c (mg  L\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE})')
-    ax.set_ylabel('q (mg  g\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE})')
-    ax.set_title('DOC Adsorption Analysis')
+    ax.set_xlabel(r'$C_{eq}$ mg/L', fontsize=14)
+    ax.set_ylabel(r'$C_{s}$ mg/g', fontsize=14)
+    ax.set_title('Sorption Analysis', fontsize=18)
+
 
     # Adding a grid for better readability
     ax.grid(True)
 
     # Adding legend to identify scatter and line
-    ax.legend()
+    ax.legend(fontsize=12)
 
     return fig
 
@@ -306,15 +313,15 @@ def plot_doc_log_curve(c_conc, exp_c, exp_q, calc_loading):
     ax.plot(np.log10(c_conc), np.log10(calc_loading), color='black', linestyle='-', label='Calculated Data')
 
     # Adding plot labels and title
-    ax.set_xlabel('log(c) (log(mg  L\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}))')
-    ax.set_ylabel('log(q) (log(mg  g\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}))')
-    ax.set_title('DOC Adsorption Analysis (Log Scale)')
+    ax.set_xlabel(r'$C_{eq}$ mg/L', fontsize=14)
+    ax.set_ylabel(r'$C_{s}$ mg/g', fontsize=14)
+    ax.set_title('Sorption Analysis (Log Scale)', fontsize=18)
 
     # Adding a grid for better readability
     ax.grid(True)
 
     # Adding legend to identify scatter and line
-    ax.legend()
+    ax.legend(fontsize=12)
 
     return fig
 
@@ -334,15 +341,15 @@ def plot_dosage_vs_concentration(dosage, concentration, calculated_concentration
     ax.plot(dosage, calculated_concentration, color='red', linestyle='--', label='Calculated Concentration Line')
 
     # Adding plot labels and title
-    ax.set_xlabel('Dosage (mg/L)')
-    ax.set_ylabel('Concentration (mg/L)')
-    ax.set_title('Dosage vs. Experimental and Calculated Concentration')
+    ax.set_xlabel('Dosage Conc (mg/L)', fontsize=14)
+    ax.set_ylabel(r'$C_{eq}$ (mg/L)', fontsize=14)
+    ax.set_title('Dosage vs. Experimental and Calculated Concentration', fontsize=18)
 
     # Adding a grid for better readability
     ax.grid(True)
 
     # Adding legend to identify scatter and line
-    ax.legend()
+    ax.legend(fontsize=12)
 
     return fig
 
@@ -452,7 +459,6 @@ def fit_and_predict2(x_data, y_data, method='polynomial', level=0, scale_factor=
 
 def iast_equations(vars, initial_concentrations, K_values, n_values, adsorbent_dose):
     qT, Pi = vars
-    print(f"initial_concentration: {len(initial_concentrations)}, adsorbent_dose: {(adsorbent_dose)}, qT:{(qT)}, n_values:{len(n_values)}, Pi, K_values")
     eq1 = sum(
         (initial_concentrations[i] / (adsorbent_dose * qT + n_values[i] * Pi / K_values[i])) ** (1 / n_values[i]) for i
         in range(len(K_values))) - 1
@@ -549,8 +555,8 @@ def run_trm(K_DOC, n_DOC, c0_MP, mA_VL_MP, c_MP, c0_DOC, ci_DOC, qi_DOC, q_MP, c
     K_MP_opt, n_MP_opt = output(result.x, c0_MP)
 
 
-    print("Optimized K_MP:", K_MP_opt)
-    print("Optimized n_MP:", n_MP_opt)
+    # print("Optimized K_MP:", K_MP_opt)
+    # print("Optimized n_MP:", n_MP_opt)
 
     # Validate the Results
     K = np.append(K_DOC, K_MP_opt)
@@ -569,7 +575,7 @@ def run_trm(K_DOC, n_DOC, c0_MP, mA_VL_MP, c_MP, c0_DOC, ci_DOC, qi_DOC, q_MP, c
         q_MP_calc, params = fit_and_predict(x_data, q_MP, method='polynomial')
 
 
-    df = pd.DataFrame({"MP Calc Conc (mg.C/L)": c_MP_calc, "MP Calc Loading (mg.C/g)": q_MP_calc}, index=[f"Dosage {d} mg.C/L" for d in mA_VL_MP])
+    df = pd.DataFrame({"Dosage (mg.C/L)": mA_VL_MP, "MP Calc Conc (mg.C/L)": c_MP_calc, "MP Calc Loading (mg.C/g)": q_MP_calc})
 
 
     # Calculate mean percentage error
@@ -583,7 +589,7 @@ def run_trm(K_DOC, n_DOC, c0_MP, mA_VL_MP, c_MP, c0_DOC, ci_DOC, qi_DOC, q_MP, c
     return K_MP_opt, n_MP_opt, df, mean_error
 
 def plot_trm(title,c_data, q_data, c_MP_calc, q_MP_calc, c_single, q_single, q_single_calc, c_without_corrected,q_without_corrected):
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     # Plot single solute isotherm
     ax.scatter(c_single, q_single, label='Single-solute isotherm data', marker='o')
@@ -598,10 +604,10 @@ def plot_trm(title,c_data, q_data, c_MP_calc, q_MP_calc, c_single, q_single, q_s
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel('c (mg/L)')
-    ax.set_ylabel('q (mg/g)')
-    ax.set_title(title)
-    ax.legend()
+    ax.set_xlabel(r'$C_{eq}$ (mg/L)', fontsize=14)
+    ax.set_ylabel(r'$C_{s}$ (mg/g)', fontsize=14)
+    ax.set_title(title, fontsize=18)
+    ax.legend(fontsize=12)
     ax.grid(True, which="both", ls="--")
     
     return fig
@@ -622,15 +628,15 @@ def plot_trm_with_dosage(dosage, concentration, calculated_concentration):
     ax.plot(dosage, calculated_concentration, color='red', linestyle='--', label='MP Calculated Concentration')
 
     # Adding plot labels and title
-    ax.set_xlabel('Dosage (mg/L)')
-    ax.set_ylabel('Concentration (mg/L)')
-    ax.set_title('Tracer Model Dosage Vs Concentration (MP)')
+    ax.set_xlabel('Dosage (mg/L)', fontsize=14)
+    ax.set_ylabel('Concentration (mg/L)', fontsize=14)
+    ax.set_title('Tracer Model Dosage Vs Concentration (MP)', fontsize=18)
 
     # Adding a grid for better readability
     ax.grid(True)
 
     # Adding legend to identify scatter and line
-    ax.legend()
+    ax.legend(fontsize=12)
 
     return fig
 
@@ -650,15 +656,15 @@ def plot_iast_without_correction_with_dosage(dosage, concentration, calculated_c
     ax.plot(dosage, calculated_concentration, color='red', linestyle='--', label='IAST without correction Concentration')
 
     # Adding plot labels and title
-    ax.set_xlabel('Dosage (mg/L)')
-    ax.set_ylabel('Concentration (mg/L)')
-    ax.set_title('IAST without correction Dosage Vs Concentration (MP)')
+    ax.set_xlabel('Dosage (mg/L)', fontsize=14)
+    ax.set_ylabel('Concentration (mg/L)', fontsize=14)
+    ax.set_title('IAST without correction Dosage Vs Concentration (MP)', fontsize=18)
 
     # Adding a grid for better readability
     ax.grid(True)
 
     # Adding legend to identify scatter and line
-    ax.legend()
+    ax.legend(fontsize=12)
 
     return fig
 
@@ -685,10 +691,10 @@ def plot_adsorption(adsorbent_dose, component_wise_data, num_components):
         else:
             ax.plot(adsorbent_dose, [concentrations] * len(adsorbent_dose), label=label, linestyle='--')
 
-    ax.set_xlabel('Adsorbent dose (mg/L)')
-    ax.set_ylabel('Concentration, c (mg/L DOC)')
-    ax.set_title('Adsorption Characteristics')
-    ax.legend()
+    ax.set_xlabel('Dosage Conc (mg/L)', fontsize=14)
+    ax.set_ylabel(r'$C_{eq}$ (mg/L)', fontsize=14)
+    ax.set_title('Adsorption Characteristics', fontsize=18)
+    ax.legend(fontsize=12)
     ax.grid(True)
     return fig
 
