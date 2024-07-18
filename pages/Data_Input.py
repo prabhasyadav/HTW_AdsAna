@@ -77,7 +77,7 @@ with tab1:
             # print("Error in reading file:", e)
             st.error('Invalid File Format')
     elif input_file == None and 'dosage_lst' not in st.session_state.keys():
-        input_file = './input_def.csv'
+        input_file = './sample_data/sample_iso.csv'
         try:
             mA_VL, ci, qi, K, n, c0 = read_csv_and_extract_columns(input_file)    
         except Exception as e:
