@@ -66,8 +66,8 @@ else:
 
         #---------Calculated Conc and Adsorption Result
         st.subheader("Calculated Concentration and Adsorption")
-        calc_df = pd.DataFrame({'Exp Conc (mg.C/L)':c_exp_lst, 'Calc Conc (mg.C/L)':c_calc, 'Exp Adsorption (mg.C/g)':q_exp_lst, 'Calc Adsorption (mg.C/g)':q_calc}, index=[f"Dosage {d} mg.C/L" for d in dosage_lst])
-        st.dataframe(calc_df, use_container_width=True)
+        calc_df = pd.DataFrame({'Dosage (mg.C/L)':dosage_lst, 'Exp Conc (mg.C/L)':c_exp_lst, 'Calc Conc (mg.C/L)':c_calc, 'Exp Adsorption (mg.C/g)':q_exp_lst, 'Calc Adsorption (mg.C/g)':q_calc})
+        st.dataframe(calc_df, use_container_width=True, hide_index=True)
 
         st.subheader("Concentration Distribution")
         iso_dist = []
@@ -95,13 +95,13 @@ else:
         st.divider()
         st.subheader("Calculated Concentration at all dosage")
         ci = get_ci(x[-1], dosage_lst, c_calc, K)
-        st.dataframe(ci, use_container_width=True)
+        st.dataframe(ci, use_container_width=True, hide_index=True)
         st.session_state['ci'] = ci
 
         # show qi for all components at all dosage
         st.subheader("Calculated Adsorption at all dosage")
         qi = get_qi(x[-1], dosage_lst, q_calc, K)
-        st.dataframe(qi, use_container_width=True)
+        st.dataframe(qi, use_container_width=True, hide_index=True)
 
         
     if sorption_data:
@@ -128,7 +128,7 @@ else:
                 q_single_calc = df_single['calc q (mg.C/g)']
 
                 st.markdown("""<h4>Single Solute Isotherm Data</h4>""", unsafe_allow_html=True)
-                st.dataframe(df_single)
+                st.dataframe(df_single, hide_index=True)
 
                 st.markdown(f"""<h5>K: {round(K_single, 4)}</h5>""", unsafe_allow_html=True)
                 st.markdown(f"""<h5>n: {round(n_single, 4)}</h5>""", unsafe_allow_html=True)
@@ -145,10 +145,11 @@ else:
                 initial_concentrations.append(c0_mp) #------->>
 
                 adsorbent_doses, c_without_corrected, q_without_corrected, mean_error = iast_without_correction(mA_VL_mp, K_values, n_values, initial_concentrations, c_mp, q_mp)
-                iast_wo_corr_df = pd.DataFrame({'Exp Conc (mg.C/L)': c_mp, 'Calc Conc (mg.C/L)': c_without_corrected, 'Exp Loading (mg.C/g)': q_mp, 'Calc Loading (mg.C/g)': q_without_corrected}, index=[f"Dosage {d}" for d in adsorbent_doses])
+                iast_wo_corr_df = pd.DataFrame({'Dosage (mg.C/L)':adsorbent_doses, 'Exp Conc (mg.C/L)': c_mp, 'Calc Conc (mg.C/L)': c_without_corrected, 'Exp Loading (mg.C/g)': q_mp, 'Calc Loading (mg.C/g)': q_without_corrected})
+                iast_wo_corr_df.index += 1
                 st.session_state['iast_wo_corr_df'] = iast_wo_corr_df
                 st.markdown("""<h4>IAST Without Correction</h4>""", unsafe_allow_html=True)
-                st.dataframe(iast_wo_corr_df)
+                st.dataframe(iast_wo_corr_df, hide_index=True)
                 st.markdown(f"""<h5>Mean Error: {round(mean_error, 2)}%</h5>""", unsafe_allow_html=True)
 
                 st.divider()
@@ -160,7 +161,7 @@ else:
                 st.markdown(f"""<h5>Optimized n (Micro-Pollutant): {round(n_MP_opt, 4)}</h5>""", unsafe_allow_html=True)
                 trm_df.insert(0, 'Exp Conc (mg.C/L)', c_mp)
                 trm_df.insert(2, 'Exp Loading (mg.C/g)', q_mp)
-                st.dataframe(trm_df)
+                st.dataframe(trm_df, hide_index=True)
                 st.markdown(f"""<h5>Mean Error: {round(trm_mean_error,2)}%</h5>""", unsafe_allow_html=True)
             else:
                 st.info("No Competetive Adsorption Input Data.")
@@ -196,29 +197,28 @@ else:
         
             adsorption_plot_fig = plot_adsorption(dosage_lst, component_wise_data, len(K))
             st.pyplot(adsorption_plot_fig)
+        if sorption_data:
+            with st.expander("TRM Plot"):
+                if 'c0_mp' in st.session_state.keys():
+                    trm_plot_fig = plot_trm(st.session_state['name_mp'], c_mp, q_mp, c_mp_calc, q_mp_calc, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
+                    st.pyplot(trm_plot_fig)
+                else:
+                    st.info("No Competetive Adsorption Data.")
 
-        with st.expander("TRM Plot"):
-            if 'c0_mp' in st.session_state.keys():
-                trm_plot_fig = plot_trm(st.session_state['name_mp'], c_mp, q_mp, c_mp_calc, q_mp_calc, c_single, q_single, q_single_calc, c_without_corrected, q_without_corrected)
-                st.pyplot(trm_plot_fig)
-            else:
-                st.info("No Competetive Adsorption Data.")
+            with st.expander("TRM Plot with Dosage"):
+                if 'c0_mp' in st.session_state.keys():
+                    trm_dos_plot = plot_trm_with_dosage(mA_VL_mp, c_mp, c_mp_calc)
+                    st.pyplot(trm_dos_plot)
+                else:
+                    st.info("No Competetive Adsorption Data.")
 
-
-        with st.expander("TRM Plot with Dosage"):
-            if 'c0_mp' in st.session_state.keys():
-                trm_dos_plot = plot_trm_with_dosage(mA_VL_mp, c_mp, c_mp_calc)
-                st.pyplot(trm_dos_plot)
-            else:
-                st.info("No Competetive Adsorption Data.")
-
-        with st.expander("IAST Plot Without Correction"):
-            if 'c0_mp' in st.session_state.keys():
-                iast_dos_plot = plot_iast_without_correction_with_dosage(mA_VL_mp, c_without_corrected, q_without_corrected) 
-                st.pyplot(iast_dos_plot)
-            else:
-                st.info("No Competetive Adsorption Data.")
-                
+            with st.expander("IAST Plot Without Correction"):
+                if 'c0_mp' in st.session_state.keys():
+                    iast_dos_plot = plot_iast_without_correction_with_dosage(mA_VL_mp, c_without_corrected, q_without_corrected) 
+                    st.pyplot(iast_dos_plot)
+                else:
+                    st.info("No Competetive Adsorption Data.")
+                    
 
         # with st.expander("Component Concentration at Different Dosages"):
         #     ci = get_ci(x[-1], dosage_lst, c_calc, K)
