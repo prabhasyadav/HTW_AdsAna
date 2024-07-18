@@ -22,6 +22,9 @@ st.markdown("""
         font-weight: 700;
         text-shadow: black 2px 2px 5px;
 	}
+
+    div[data-testid="stExpander"] p {
+    font-size: 1rem;
 </style>""", unsafe_allow_html=True
 )
 st.write("# Results")
