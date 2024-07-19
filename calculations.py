@@ -243,14 +243,16 @@ def get_qi(dist, dosage_lst, q, K):
 
     for i,d in zip(dosage_lst, range(len(dosage_lst))):
         dosage_data = [i]
-        for _ in dist:
-            step = _ / 100
+        for comp_i, value in enumerate(dist):
+            if comp_i == 0:
+                continue            
+            step = value / 100
             res = q[d] * step
             dosage_data.append(res)
         qi_data.append(dosage_data)
 
     # Convert data into a DataFrame for better presentation
-    qi_col = [f"Component {i}" for i in range(len(dist))]
+    qi_col = [f"Component {i+1}" for i in range(len(dist)-1)]
     qi_col.insert(0, 'Dosage (mg.C/L)')
     qi_df = pd.DataFrame(qi_data, columns=qi_col)
 
