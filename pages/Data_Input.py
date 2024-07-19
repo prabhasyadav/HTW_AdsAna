@@ -28,10 +28,7 @@ st.markdown("""
     div[data-testid="stExpander"] p {
         font-size: 1rem;
     }
-}
-
-</style>""", unsafe_allow_html=True
-)
+</style>""", unsafe_allow_html=True)
 
 if 'comp_data_input' in st.session_state.keys():
     comp_data_input = st.session_state['comp_data_input']
@@ -52,10 +49,13 @@ with st.sidebar:
     comp_data_input = st.checkbox("Add Competetive Sorption Data", value=comp_data_input, on_change = flip_sorption_opt)
     st.write("")
     with st.expander("Need Sample Data?"):
-        st.link_button("Isotherm Data", "https://github.com/kansakarpratistha/HTW_AdsAna/tree/main/sample_data/sample_iso.csv")
-        st.link_button("Micro Pollutant Data", "https://github.com/kansakarpratistha/HTW_AdsAna/tree/main/sample_data/sample_mp.csv")
-        st.link_button("Single Solute Data", "https://github.com/kansakarpratistha/HTW_AdsAna/tree/main/sample_data/sample_ss.csv")
-
+        with open('./sample_data/sample_iso.csv') as f:
+            st.download_button('Isotherm Data', f, file_name = 'sample_isotherm_data.csv', use_container_width=True) 
+        with open('./sample_data/sample_mp.csv') as f:
+            st.download_button('Micropolltant Data', f, file_name = 'sample_micropollutant_data.csv', use_container_width=True) 
+        with open('./sample_data/sample_ss.csv') as f:
+            st.download_button('Single Solute Data', f, file_name = 'sample_singlesolute_data.csv', use_container_width=True) 
+        
 if comp_data_input == False:
     sorption_data = ['mA_VL_mp', 'c_mp', 'q_mp', 'c0_mp', 'name_mp', 'mA_VL_ss', 'c_ss', 'c0_ss']
     for item in sorption_data:
@@ -215,40 +215,37 @@ with tab2:
         st.download_button("Download ISO Data", input_data_csv, "iso_input.csv", "text/csv", key='download-iso-csv')
 
 if tab3:    
-    with tab3:
-        # st.subheader('Competetive Adsorption Data Input')
-        if 'mA_VL_mp' not in st.session_state.keys():
-            mA_VL_mp=[]
-            c_mp = []
-            q_mp = []
-            c0_mp = 0
-            name_mp = ''
-        else:
-            mA_VL_mp = st.session_state['mA_VL_mp']
-            c_mp = st.session_state['c_mp']
-            q_mp = st.session_state['q_mp']
-            c0_mp = st.session_state['c0_mp']
-            name_mp = st.session_state['name_mp']
-        
-        if 'mA_VL_ss' not in st.session_state.keys():
-            mA_VL_ss = []
-            c_ss = []
-            c0_ss = 0
-        else:
-            mA_VL_ss = st.session_state['mA_VL_ss']
-            c_ss = st.session_state['c_ss']
-            c0_ss = st.session_state['c0_ss']
+    with tab3:        
 
         st.markdown("""<h4>Micropollutant Data</h4>""", unsafe_allow_html=True)
         col1, col2 = st.columns(2, gap="medium")
         with col1:
             mp_input_file = st.file_uploader("Upload Micropollutant File", accept_multiple_files=False)
-            mp_name = st.text_input("Micropollutant Name", value=name_mp)
+            mA_VL_mp=[]
+            c_mp = []
+            q_mp = []
+            c0_mp = 0
+            name_mp = ''
             if mp_input_file:
                 try:
                     mA_VL_mp, c_mp, q_mp, c0_mp = read_mp_data_file(mp_input_file)
+                    name_mp = ''
                 except Exception as e:
                     st.error(f"Error: {e}") 
+            elif mp_input_file == None and 'mA_VL_mp' not in st.session_state.keys():
+                mp_input_file = './sample_data/sample_mp.csv'
+                try:    
+                    mA_VL_mp, c_mp, q_mp, c0_mp = read_mp_data_file(mp_input_file)
+                    name_mp = "Napthaline" #default name for the default loaded dataset
+                except Exception as e:
+                    st.error(f"Error: {e}") 
+            elif mp_input_file == None and 'mA_VL_mp' in st.session_state.keys():
+                mA_VL_mp = st.session_state['mA_VL_mp']
+                c_mp = st.session_state['c_mp']
+                q_mp = st.session_state['q_mp']
+                c0_mp = st.session_state['c0_mp']
+                name_mp = st.session_state['name_mp']
+            mp_name = st.text_input("Micropollutant Name", value=name_mp)
         with col2:
             c0_mp = st.number_input(r"$c_{O}$", value=c0_mp, key='comp_ads_c0_mp')
 
@@ -265,12 +262,24 @@ if tab3:
         col1, col2 = st.columns(2, gap="medium")
         with col1:
             ss_input_file = st.file_uploader("Upload Single Solute File", accept_multiple_files=False)
-        
+            mA_VL_ss = []
+            c_ss = []
+            c0_ss = 0
             if ss_input_file:
                 try:
                     mA_VL_ss, c_ss, c0_ss = read_ss_data_file(ss_input_file)
                 except Exception as e:
                     st.error(f"Error: {e}")
+            elif ss_input_file == None and 'mA_VL_ss' not in st.session_state.keys():
+                ss_input_file = './sample_data/sample_ss.csv'
+                try:
+                    mA_VL_ss, c_ss, c0_ss = read_ss_data_file(ss_input_file)
+                except Exception as e:
+                    st.error(f"Error: {e}")
+            elif ss_input_file == None and 'mA_VL_ss' in st.session_state.keys():
+                mA_VL_ss = st.session_state['mA_VL_ss']
+                c_ss = st.session_state['c_ss']
+                c0_ss = st.session_state['c0_ss']
         
         with col2:
             c0_ss = st.number_input(r"$c_{O}$", value=c0_ss, key='comp_ads_c0_ss')
@@ -289,13 +298,13 @@ if tab3:
             try:
                 st.session_state['name_mp'] = mp_name
                 st.session_state['c0_mp'] = c0_mp
-                st.session_state['mA_VL_mp'] = mA_VL_mp
-                st.session_state['c_mp'] = c_mp
-                st.session_state['q_mp'] = q_mp
+                st.session_state['mA_VL_mp'] = mp_df['mA/VL'].to_numpy()
+                st.session_state['c_mp'] = mp_df['c'].to_numpy()
+                st.session_state['q_mp'] = mp_df['q'].to_numpy()
 
                 st.session_state['c0_ss'] = c0_ss
-                st.session_state['mA_VL_ss'] = mA_VL_ss
-                st.session_state['c_ss'] = c_ss
+                st.session_state['mA_VL_ss'] = ss_df['mA/VL'].to_numpy()
+                st.session_state['c_ss'] = ss_df['c'].to_numpy()
 
                 V = 1 
                 q_ss = np.subtract(c0_ss, np.array(c_ss)) * V / mA_VL_ss
