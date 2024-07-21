@@ -1,10 +1,10 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Adsorption Analysis (Ver. Alpha)",
+    page_title="Ideal Adsorption Solution Theory (IAST) Application (Ver. Alpha)",
 )
 
-st.write("# Adsorption Analysis Application")
+st.write("# IAST Applications")
 
 st.markdown(
     """
