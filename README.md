@@ -1,3 +1,3 @@
 # HTW_AdsAna
 
-Adsorption Analysis Application
+Ideal Adsorption Solution Theory (IAST) Applications
